@@ -1,6 +1,6 @@
 from tortoise import fields, models
-from src.common.models.base_models import BaseModel
-from src.common.models.base_models.constant import RatingEnum
+from src.common.models.base_model import BaseModel
+from src.common.models.consts import RatingEnum
 
 class Review(BaseModel, models.Model):
     review_id = fields.IntField(pk=True)

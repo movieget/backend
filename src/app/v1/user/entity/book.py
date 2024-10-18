@@ -1,6 +1,6 @@
 from tortoise import fields, models
-from src.common.models.base_models import BaseModel
-from src.common.models.base_models.constant import StatusEnum, MoviePriceEnum
+from src.common.models.base_model import BaseModel
+from src.common.models.consts import MoviePriceEnum, StatusEnum
 
 class Book(BaseModel, models.Model):
     book_id = fields.IntField(pk=True)

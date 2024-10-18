@@ -8,7 +8,7 @@ from src.common.models.consts import PaymentMethod
 from src.app.v1.user.entity.user import User
 from src.app.v1.user.entity.book import Book
 from src.app.v1.user.entity.refund import Refund
-from app.Alert.entity.alert import Alert
+from src.app.v1.user.entity.alert import Alert
 
 
 class Payment(BaseModel):
@@ -21,9 +21,16 @@ class Payment(BaseModel):
 
     book: fields.ForeignKeyRelation[Book] = fields.ForeignKeyField('models.Book', related_name='payments')
     user: fields.ForeignKeyRelation[User] = fields.ForeignKeyField('models.User', related_name='payments')
-    refund: fields.ForeignKeyRelation[Refund] = fields.ForeignKeyField('models.Refund', related_name='payments',
-                                                                       null=True)
-    alert: fields.ForeignKeyRelation[Alert] = fields.ForeignKeyField('models.Alert', related_name='payments', null=True)
+    refund: fields.ForeignKeyRelation[Refund] = fields.ForeignKeyField(
+        'models.Refund',
+        related_name='payments',
+        null=True
+    )
+    alert: fields.ForeignKeyRelation[Alert] = fields.ForeignKeyField(
+        'models.Alert',
+        related_name='payments',
+        null=True
+    )
 
     class Meta:
         table = "payment"
@@ -33,7 +40,7 @@ class Payment(BaseModel):
 
 
 # 역참조를 위한 타입 힌트
-Book.payments: fields.ReverseRelation[Payment]
-User.payments: fields.ReverseRelation[Payment]
-Refund.payments: fields.ReverseRelation[Payment]
-Alert.payments: fields.ReverseRelation[Payment]
+# Book.payments: fields.ReverseRelation[Payment]
+# User.payments: fields.ReverseRelation[Payment]
+# Refund.payments: fields.ReverseRelation[Payment]
+# Alert.payments: fields.ReverseRelation[Payment]
