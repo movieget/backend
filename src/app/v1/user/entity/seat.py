@@ -8,5 +8,8 @@ class Seat(BaseModel, models.Model):
     is_selected = fields.BooleanField(default=False)
     screen_id = fields.ForeignKeyField("models.Screen", related_name="seats")
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.seat_number
+
+    class Meta:
+        table = "seat"
