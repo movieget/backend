@@ -3,13 +3,13 @@ from src.common.models.base_model import BaseModel
 
 
 class Location(BaseModel, models.Model):
-    location_id = fields.IntField(pk=True)
-    spot = fields.CharField(max_length=10)
-    longitude = fields.IntField()
-    latitude = fields.IntField()
+    id = fields.IntField(pk=True)
+    spot = fields.CharField(max_length=20)
+    longitude = fields.FloatField(null=True)
+    latitude = fields.FloatField(null=True)
 
     def __str__(self):
-        return self.name
+        return self.spot
 
     class Meta:
         table = "location"
