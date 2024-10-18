@@ -13,3 +13,5 @@ src/.env
 **/._.DS_Store
 
 .python-version
+
+migrations

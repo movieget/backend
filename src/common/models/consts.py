@@ -14,6 +14,7 @@ class PaymentMethod(str, Enum):
     BANK_TRANSFER = "bank_transfer"
     PAYPAL = "paypal"
 
+
 class RatingEnum(str, Enum):
     no_star = "☆☆☆☆☆"
     one_star = "★☆☆☆☆"
@@ -32,3 +33,23 @@ class StatusEnum(str, Enum):
 class MoviePriceEnum(str, Enum):
     adult = "14000"
     child = "12000"
+
+
+class MovieGenreEnum(str, Enum):
+    ACTION = "Action"
+    DRAMA = "Drama"
+    COMEDY = "Comedy"
+    HORROR = "Horror"
+    SCIFI = "Sci-Fi"
+    ROMANCE = "Romance"
+
+
+class MovieStatusEnum(str, Enum):
+    NOW_SHOWING = "상영 중"
+    COMING_SOON = "상영 예정"
+    ENDED = "상영 종료"
+
+class MovieAgeRatingEnum(int, Enum):
+    basic = 12
+    middle = 15
+    high = 18
