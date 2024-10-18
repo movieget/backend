@@ -1,5 +1,5 @@
 from tortoise import fields, models
-from common.models.base_model import BaseModel
+from src.common.models.base_model import BaseModel
 
 
 class Movie(BaseModel, models.Model):

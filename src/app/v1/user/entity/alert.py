@@ -1,5 +1,5 @@
 from tortoise import fields, models
-from src.common.models.base_models import BaseModel
+from src.common.models.base_model import BaseModel
 
 class Alert(BaseModel, models.Model):
     alert_id = fields.IntField(pk=True)
