@@ -1,7 +1,5 @@
 from fastapi import APIRouter, FastAPI
-from tortoise.contrib.fastapi import register_tortoise
-
-from core.config import TORTOISE_ORM
+from core.configs.database_config import database_initialize
 
 app = FastAPI()
 
@@ -9,20 +7,12 @@ api_router = APIRouter(prefix="/api/v1")
 
 
 app.include_router(api_router)
+database_initialize(app)
 
 
 @app.get("/")
 async def root():
     return {"message": "Welcome"}
-
-
-# Tortoise ORM 초기화
-register_tortoise(
-    app,
-    config=TORTOISE_ORM,
-    generate_schemas=True,
-    add_exception_handlers=True,
-)
 
 
 if __name__ == "__main__":

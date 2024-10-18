@@ -1,4 +1,7 @@
 import os
+from fastapi import FastAPI
+from tortoise import Tortoise
+from tortoise.contrib.fastapi import register_tortoise
 
 from dotenv import load_dotenv
 
@@ -29,4 +32,16 @@ TORTOISE_ORM = {
             "default_connection": "default",
         },
     },
+    # "routers": ["app.configs.database_config.Router"],
+    "timezone": "Asia/Seoul",
 }
+
+
+def database_initialize(app: FastAPI) -> None:
+    Tortoise.init_models(Tortoise_Models, "models")
+    register_tortoise(
+        app,
+        config=TORTOISE_ORM,
+        generate_schemas=False,
+        add_exception_handlers=True,
+    )
