@@ -19,24 +19,26 @@ class Payment(BaseModel):
     created_at: datetime = fields.DatetimeField(auto_now_add=True)
     updated_at: datetime = fields.DatetimeField(auto_now=True)
 
-    book: fields.ForeignKeyRelation[Book] = fields.ForeignKeyField('models.Book', related_name='payments')
-    user: fields.ForeignKeyRelation[User] = fields.ForeignKeyField('models.User', related_name='payments')
+    book: fields.ForeignKeyRelation[Book] = fields.ForeignKeyField(
+        "models.Book", related_name="payments"
+    )
+    user: fields.ForeignKeyRelation[User] = fields.ForeignKeyField(
+        "models.User", related_name="payments"
+    )
     refund: fields.ForeignKeyRelation[Refund] = fields.ForeignKeyField(
-        'models.Refund',
-        related_name='payments',
-        null=True
+        "models.Refund", related_name="payments", null=True
     )
     alert: fields.ForeignKeyRelation[Alert] = fields.ForeignKeyField(
-        'models.Alert',
-        related_name='payments',
-        null=True
+        "models.Alert", related_name="payments", null=True
     )
 
     class Meta:
         table = "payment"
 
     def __str__(self) -> str:
-        return f"Payment {self.payment_id}: {self.payment_amount} ({self.payment_method})"
+        return (
+            f"Payment {self.payment_id}: {self.payment_amount} ({self.payment_method})"
+        )
 
 
 # 역참조를 위한 타입 힌트

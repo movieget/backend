@@ -14,4 +14,4 @@ class Review(BaseModel, models.Model):
     movie_id = fields.ForeignKeyField("models.Movie", related_name="reviews", on_delete=fields.CASCADE)
 
     class Meta:
-        table_name = 'reviews'
+        table_name = 'review'

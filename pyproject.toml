@@ -17,8 +17,14 @@ python-dotenv = "1.0.1"
 pydantic = "2.9.2"
 pydantic-settings = "2.5.2"
 
+[tool.black]
+line-length = 150
+
+[tool.isort]
+profile = "black"
+
 [tool.aerich]
-tortoise_orm = "app.core.config.TORTOISE_ORM"
+tortoise_orm = "src.core.configs.database_config.TORTOISE_ORM"
 location = "./migrations"
 src_folder = "./."
 

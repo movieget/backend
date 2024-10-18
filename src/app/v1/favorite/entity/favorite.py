@@ -13,4 +13,4 @@ class Favorite(BaseModel, models.Model):
     )
 
     class Meta:
-        table_name = "favorite"
+        table = "favorite"
