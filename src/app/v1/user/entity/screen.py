@@ -10,5 +10,8 @@ class Screen(BaseModel, models.Model):
         "models.Cinema", related_name="screens", on_delete=fields.CASCADE
     )
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.screen_number
+
+    class Meta:
+        table = "screen"

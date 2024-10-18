@@ -11,3 +11,6 @@ class Cinema(BaseModel, models.Model):
 
     def __str__(self):
         return self.cinema_name
+
+    class Meta:
+        table = "cinema"

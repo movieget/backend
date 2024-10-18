@@ -19,3 +19,6 @@ class Movie(BaseModel, models.Model):
 
     def __str__(self):
         return self.title
+
+    class Meta:
+        table = 'movie'
