@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "template"
+name = "backend"
 version = "0.1.0"
 description = ""
 authors = ["skwwnl <skwwnl@gmail.com>"]
@@ -14,6 +14,8 @@ python-jose = "3.3.0"
 aerich = "0.7.2"
 aiomysql = "0.2.0"
 python-dotenv = "1.0.1"
+pydantic = "2.9.2"
+pydantic-settings = "2.5.2"
 
 [tool.aerich]
 tortoise_orm = "app.core.config.TORTOISE_ORM"
