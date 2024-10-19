@@ -15,3 +15,37 @@ src/.env
 .python-version
 
 migrations
+
+# Terraform 관련 파일 및 디렉토리
+Terraform/**/.terraform/*
+Terraform/**/*.tfstate
+Terraform/**/*.tfstate.*
+Terraform/**/crash.log
+Terraform/**/crash.*.log
+
+# 변수 파일 (민감한 정보 포함 가능)
+Terraform/**/*.tfvars
+Terraform/**/*.tfvars.json
+
+# CLI 구성 파일
+Terraform/**/.terraformrc
+Terraform/**/terraform.rc
+
+# 계획 파일
+Terraform/**/*.tfplan
+Terraform/**/*tfplan*
+
+# 오버라이드 파일
+Terraform/**/override.tf
+Terraform/**/override.tf.json
+Terraform/**/*_override.tf
+Terraform/**/*_override.tf.json
+
+# 프로바이더 잠금 파일
+Terraform/**/.terraform.lock.hcl
+
+# 로그 파일
+Terraform/**/*.log
+
+# 백업 파일
+Terraform/**/*.backup
