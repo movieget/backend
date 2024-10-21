@@ -4,7 +4,7 @@ venv/
 .vscode
 .mypy_cache
 
-src/.env
+src/.env*
 .coverage
 
 .DS_Store

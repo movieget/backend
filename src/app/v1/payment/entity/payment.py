@@ -11,8 +11,8 @@ class Payment(BaseModel, models.Model):
     payment_method: PaymentMethod = fields.CharEnumField(PaymentMethod, max_length=20)
     payment_time: datetime = fields.DatetimeField()
 
-    user_id = fields.ForeignKeyField("models.User", related_name="payments", null=True, on_delete=fields.CASCADE)
-    book_id = fields.ForeignKeyField("models.Book", related_name="payments", on_delete=fields.CASCADE)
+    user = fields.ForeignKeyField("models.User", related_name="payments", null=True, on_delete=fields.CASCADE)
+    book = fields.ForeignKeyField("models.Book", related_name="payments", on_delete=fields.CASCADE)
 
     class Meta:
         table = "payment"

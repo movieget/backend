@@ -2,7 +2,8 @@ import os
 
 from dotenv import load_dotenv
 
-# .env 파일 로드
+
+# 환경에 따른 .env 파일 로드
 load_dotenv()
 
 Tortoise_Models = [
