@@ -11,8 +11,8 @@ class Review(BaseModel, models.Model):
     review_image_url = fields.CharField(max_length=50)
     rating = fields.CharEnumField(RatingEnum, max_length=20, default=RatingEnum.no_star)
     registration_date = fields.DateField(auto_now_add=True)
-    user_id = fields.ForeignKeyField("models.User", related_name="reviews", on_delete=fields.CASCADE)
-    movie_id = fields.ForeignKeyField("models.Movie", related_name="reviews", on_delete=fields.CASCADE)
+    user = fields.ForeignKeyField("models.User", related_name="reviews", on_delete=fields.CASCADE)
+    movie = fields.ForeignKeyField("models.Movie", related_name="reviews", on_delete=fields.CASCADE)
 
     class Meta:
         table_name = "review"

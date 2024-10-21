@@ -6,7 +6,7 @@ class Seat(BaseModel, models.Model):
     id = fields.IntField(pk=True)
     seat_number = fields.IntField()
     is_selected = fields.BooleanField(default=False)
-    screen_id = fields.ForeignKeyField("models.Screen", related_name="seats")
+    screen = fields.ForeignKeyField("models.Screen", related_name="seats")
 
     def __str__(self) -> str:
         return str(self.seat_number)
