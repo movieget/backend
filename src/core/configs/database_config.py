@@ -47,3 +47,14 @@ TORTOISE_ORM = {
     },
     "timezone": "Asia/Seoul",
 }
+
+
+class Settings:
+    KAKAO_CLIENT_ID = os.getenv("KAKAO_CLIENT_ID")
+    KAKAO_REDIRECT_URI = os.getenv("KAKAO_REDIRECT_URI")
+    SECRET_KEY = os.getenv("SECRET_KEY")
+    ALGORITHM = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+
+settings = Settings()
