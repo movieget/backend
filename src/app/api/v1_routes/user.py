@@ -22,7 +22,7 @@ async def kakao_login(code: str):
     kakao_user = await get_kakao_user_info(access_token)
     if not kakao_user:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="카카오 유저 정보 조회 실패")
-    # print(kakao_user)
+
     # 아래에 birthday 입력을 위한 변수 할당
     birthyear = kakao_user.get("kakao_account", {}).get("birthyear")
     birthdate = kakao_user.get("kakao_account", {}).get("birthday")
@@ -41,22 +41,23 @@ async def kakao_login(code: str):
     try:
         user = await User.get(kakao_id=kakao_id)
     except DoesNotExist:
-        # 사용자 생성
-        user = await User.create(
-            username=username,
-            email=email,
-            nickname=nickname,
-            birthday=birthday,
-            phone_number=phone_number,
-            oauth_provider=oauth_provider,
-            image_url=image_url,
-            kakao_id=kakao_id,
-
-        )
-
-    # JWT 토큰 발행
-    token = create_access_token({"id": user.id})
-    return {"access_token": token, "token_type": "bearer"}
+        pass
+    #     # 사용자 생성
+    #     user = await User.create(
+    #         username=username,
+    #         email=email,
+    #         nickname=nickname,
+    #         birthday=birthday,
+    #         phone_number=phone_number,
+    #         oauth_provider=oauth_provider,
+    #         image_url=image_url,
+    #         kakao_id=kakao_id,
+    #
+    #     )
+    #
+    # # JWT 토큰 발행
+    # token = create_access_token({"id": user.id})
+    # return {"access_token": token, "token_type": "bearer"}
 
 
 @router.get("/me", response_model=UserResponseSchema)
