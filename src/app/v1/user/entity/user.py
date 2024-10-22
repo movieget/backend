@@ -15,8 +15,6 @@ class User(BaseModel, models.Model):
     kakao_id = fields.CharField(max_length=50, unique=True, null=True)  # 추가된 필드
     is_active = fields.BooleanField(default=True)
     is_deleted = fields.BooleanField(default=False)
-    created_at = fields.DatetimeField(auto_now_add=True)
-    updated_at = fields.DatetimeField(auto_now=True)
     last_login = fields.DatetimeField(null=True)
 
     class Meta:
