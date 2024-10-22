@@ -1,18 +1,19 @@
 from fastapi import APIRouter, FastAPI
-from tortoise import Tortoise
-from core.configs.database_config import database_initialize, TORTOISE_ORM
+
+from src.core.database.connection import database_initialize
+from src.app.api.root_routes import api_router
 
 app = FastAPI()
-
-api_router = APIRouter(prefix="/api/v1")
-database_initialize(app)
-
 app.include_router(api_router)
 
+api_router = APIRouter(prefix="/api/v1")
+# database_initialize(app)
 
-# @app.on_event("startup")
-# async def startup_event():
-#     await database_initialize(app)
+
+
+@app.on_event("startup")
+async def startup_event():
+    await database_initialize(app)
 
 
 @app.get("/")
