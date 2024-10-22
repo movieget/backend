@@ -12,7 +12,7 @@ class User(BaseModel, models.Model):
     image_url = fields.CharField(max_length=255, null=True)
     oauth_provider = fields.CharField(max_length=20)
     birthday = fields.CharField(max_length=10, null=True)
-    kakao_id = fields.CharField(max_length=50, unique=True, null=True)  # 추가된 필드
+    kakao_id = fields.CharField(max_length=50, unique=True, null=True)
     is_active = fields.BooleanField(default=True)
     is_deleted = fields.BooleanField(default=False)
     last_login = fields.DatetimeField(null=True)
