@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from tortoise import Tortoise
 from tortoise.contrib.fastapi import register_tortoise
-from core.configs.database_config import TORTOISE_ORM
+from src.core.configs.database_config import TORTOISE_ORM
 
 
 async def database_initialize(app: FastAPI) -> None:
