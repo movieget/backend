@@ -16,8 +16,6 @@ src/.env*
 
 samples
 
-migrations
-
 # Terraform 관련 파일 및 디렉토리
 Terraform/**/.terraform/*
 Terraform/**/*.tfstate
