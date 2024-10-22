@@ -13,4 +13,4 @@ class BaseModel(models.Model):
     updated_at = fields.DatetimeField(auto_now=True)
 
     class Meta:
-        abtract = True
+        abstract = True
