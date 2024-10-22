@@ -15,13 +15,13 @@ class PaymentMethod(str, Enum):
     PAYPAL = "paypal"
 
 
-class RatingEnum(str, Enum):
-    no_star = "☆☆☆☆☆"
-    one_star = "★☆☆☆☆"
-    two_star = "★★☆☆☆"
-    three_star = "★★★☆☆"
-    four_star = "★★★★☆"
-    five_star = "★★★★★"
+class RatingEnum(int, Enum):
+    no_star = 0
+    one_star = 1
+    two_star = 2
+    three_star = 3
+    four_star = 4
+    five_star = 5
 
 
 class StatusEnum(str, Enum):
@@ -49,7 +49,8 @@ class MovieStatusEnum(str, Enum):
     COMING_SOON = "상영 예정"
     ENDED = "상영 종료"
 
-class MovieAgeRatingEnum(int, Enum):
-    basic = 12
-    middle = 15
-    high = 18
+class MovieAgeRatingEnum(str, Enum):
+    ALL = "all"
+    AGE_12 = "12"
+    AGE_15 = "15"
+    AGE_18 = "18"
