@@ -16,7 +16,7 @@ class Movie(BaseModel, models.Model):
     actor_Image_url = fields.CharField(max_length=100)
     overview = fields.TextField()
     trailer_url = fields.CharField(max_length=100)
-    age_rating = fields.IntEnumField(MovieAgeRatingEnum, default=MovieAgeRatingEnum.basic)
+    age_rating = fields.CharEnumField(MovieAgeRatingEnum, max_length=10, default=MovieAgeRatingEnum.ALL)
 
     def __str__(self):
         return self.title

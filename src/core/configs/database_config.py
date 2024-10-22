@@ -10,6 +10,7 @@ Tortoise_Models = [
     "src.app.v1.user.entity.user",
     "src.app.v1.alert.entity.alert",
     "src.app.v1.book.entity.book",
+    "src.app.v1.book.entity.bookseat",
     "src.app.v1.cinema.entity.cinema",
     "src.app.v1.favorite.entity.favorite",
     "src.app.v1.location.entity.location",
@@ -20,6 +21,7 @@ Tortoise_Models = [
     "src.app.v1.review.entity.review",
     "src.app.v1.screen.entity.screen",
     "src.app.v1.screen.entity.screen_info",
+    "src.app.v1.screen.entity.seat",
     "aerich.models",
 ]
 
@@ -28,8 +30,8 @@ TORTOISE_ORM = {
         "default": {
             "engine": "tortoise.backends.mysql",
             "credentials": {
-                "host": os.getenv("MYSQL_HOST", "localhost"),
-                "port": int(os.getenv("MYSQL_PORT", "3306")),
+                "host": os.getenv("MYSQL_HOST"),
+                "port": int(os.getenv("MYSQL_PORT")),
                 "user": os.environ["MYSQL_USER"],  # 필수 값
                 "password": os.environ["MYSQL_PASSWORD"],  # 필수 값
                 "database": os.environ["MYSQL_DB"],  # 필수 값
