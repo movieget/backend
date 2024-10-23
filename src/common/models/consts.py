@@ -15,13 +15,13 @@ class PaymentMethod(str, Enum):
     PAYPAL = "paypal"
 
 
-class RatingEnum(int, Enum):
-    no_star = 0
-    one_star = 1
-    two_star = 2
-    three_star = 3
-    four_star = 4
-    five_star = 5
+class RatingEnum(str, Enum):
+    no_star = "0"
+    one_star = "1"
+    two_star = "2"
+    three_star = "3"
+    four_star = "4"
+    five_star = "5"
 
 
 class StatusEnum(str, Enum):
@@ -30,9 +30,9 @@ class StatusEnum(str, Enum):
     CANCELLED = "취소"
 
 
-class MoviePriceEnum(str, Enum):
-    adult = "14000"
-    child = "12000"
+class MoviePriceEnum(int, Enum):  # IntEnum으로 사용해야 함
+    adult = 14000  # 정수 값 유지
+    child = 12000
 
 
 class MovieGenreEnum(str, Enum):
@@ -48,6 +48,7 @@ class MovieStatusEnum(str, Enum):
     NOW_SHOWING = "상영 중"
     COMING_SOON = "상영 예정"
     ENDED = "상영 종료"
+
 
 class MovieAgeRatingEnum(str, Enum):
     ALL = "all"
