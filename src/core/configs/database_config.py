@@ -20,6 +20,9 @@ Tortoise_Models = [
     "src.app.v1.review.entity.review",
     "src.app.v1.screen.entity.screen",
     "src.app.v1.screen.entity.screen_info",
+    "src.app.v1.screen.entity.seat",
+    "src.app.v1.book.entity.bookseat",
+    "src.app.v1.movie.entity.actor_image",
     "aerich.models",
 ]
 
