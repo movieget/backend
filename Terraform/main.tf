@@ -22,10 +22,16 @@ resource "aws_internet_gateway" "movieIG" {
   }
 }
 
+# 사용 가능한 가용 영역 조회
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
 # Create a Subnet
 resource "aws_subnet" "FastAPI" {
   vpc_id                  = aws_vpc.MovieVPC.id
   cidr_block              = "10.0.1.0/24"
+  availability_zone       = data.aws_availability_zones.available.names[0]
   map_public_ip_on_launch = true
 
   tags = {
@@ -137,6 +143,7 @@ resource "aws_instance" "Gateway_Server" {
   vpc_security_group_ids      = [aws_security_group.FastAPISG.id]
   subnet_id                   = aws_subnet.FastAPI.id
   associate_public_ip_address = true
+  key_name                    = aws_key_pair.Gateway_Server_pair.key_name
 
   tags = {
     Name = "Gateway_Server"
@@ -149,24 +156,43 @@ resource "aws_instance" "Backend_Server" {
   vpc_security_group_ids      = [aws_security_group.FastAPISG.id]
   subnet_id                   = aws_subnet.FastAPI.id
   associate_public_ip_address = true
+  key_name                    = aws_key_pair.Backend_Server_key_pair.key_name
 
   tags = {
     Name = "Backend_Server"
   }
 }
 
-output "instance_1_id" {
+output "Gateway_Server_id" {
   value = aws_instance.Gateway_Server.id
 }
 
-output "instance_1_public_ip" {
+output "Gateway_Server_public_ip" {
   value = aws_instance.Gateway_Server.public_ip
 }
 
-output "instance_2_id" {
+output "Backend_Server_id" {
   value = aws_instance.Backend_Server.id
 }
 
-output "instance_2_public_ip" {
+output "Backend_Server_public_ip" {
   value = aws_instance.Backend_Server.public_ip
+}
+
+output "Gateway_Server_public_key" {
+  value     = tls_private_key.Gateway_Server.public_key_openssh
+  sensitive = true
+}
+
+output "Backend_Server_public_key" {
+  value     = tls_private_key.Backend_Server_key.public_key_openssh
+  sensitive = true
+}
+
+output "Gateway_Server_private_key_path" {
+  value = local_file.Gateway_Server_private_key.filename
+}
+
+output "Backend_Server_private_key_path" {
+  value = local_file.Backend_Server_private_key.filename
 }
