@@ -75,6 +75,14 @@ resource "aws_security_group" "FastAPISG" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  ingress {
+    description = "HTTPS from anywhere"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -87,8 +95,43 @@ resource "aws_security_group" "FastAPISG" {
   }
 }
 
+# Generate SSH Key Pair for Gateway_Server
+resource "tls_private_key" "Gateway_Server" {
+  algorithm   = "RSA"
+  rsa_bits    = 4096
+}
+
+resource "aws_key_pair" "Gateway_Server_pair" {
+  key_name   = "Gateway_Server_pair"
+  public_key = tls_private_key.Gateway_Server.public_key_openssh
+}
+
+# Generate SSH Key Pair for Backend_Server
+resource "tls_private_key" "Backend_Server_key" {
+  algorithm   = "RSA"
+  rsa_bits    = 4096
+}
+
+resource "aws_key_pair" "Backend_Server_key_pair" {
+  key_name   = "Backend_Server_key_pair"
+  public_key = tls_private_key.Backend_Server_key.public_key_openssh
+}
+
+# ${path.module}는 프로젝트의 루트 디렉토리
+resource "local_file" "Gateway_Server_private_key" {
+  content  = tls_private_key.Gateway_Server.private_key_pem
+  filename = "${path.module}/Gateway_Server_private_key.pem"
+  file_permission = "0600"
+}
+
+resource "local_file" "Backend_Server_private_key" {
+  content  = tls_private_key.Backend_Server_key.private_key_pem
+  filename = "${path.module}/Backend_Server_private_key.pem"
+  file_permission = "0600"
+}
+
 # Create two EC2 Instances
-resource "aws_instance" "FastAPI_1" {
+resource "aws_instance" "Gateway_Server" {
   ami                         = "ami-096099377d8850a97"
   instance_type               = "t4g.small"
   vpc_security_group_ids      = [aws_security_group.FastAPISG.id]
@@ -96,11 +139,11 @@ resource "aws_instance" "FastAPI_1" {
   associate_public_ip_address = true
 
   tags = {
-    Name = "FastAPI-Server-1"
+    Name = "Gateway_Server"
   }
 }
 
-resource "aws_instance" "FastAPI_2" {
+resource "aws_instance" "Backend_Server" {
   ami                         = "ami-096099377d8850a97"
   instance_type               = "t4g.small"
   vpc_security_group_ids      = [aws_security_group.FastAPISG.id]
@@ -108,22 +151,22 @@ resource "aws_instance" "FastAPI_2" {
   associate_public_ip_address = true
 
   tags = {
-    Name = "FastAPI-Server-2"
+    Name = "Backend_Server"
   }
 }
 
 output "instance_1_id" {
-  value = aws_instance.FastAPI_1.id
+  value = aws_instance.Gateway_Server.id
 }
 
 output "instance_1_public_ip" {
-  value = aws_instance.FastAPI_1.public_ip
+  value = aws_instance.Gateway_Server.public_ip
 }
 
 output "instance_2_id" {
-  value = aws_instance.FastAPI_2.id
+  value = aws_instance.Backend_Server.id
 }
 
 output "instance_2_public_ip" {
-  value = aws_instance.FastAPI_2.public_ip
+  value = aws_instance.Backend_Server.public_ip
 }
