@@ -31,7 +31,7 @@ jobs:
         options: >-
           --health-cmd="mysqladmin ping"
           --health-interval=10s
-          --health-timeou=5s
+          --health-timeout=5s
           --health-retries=5
 
     # CI 환경에서 코드를 체크아웃합니다.
