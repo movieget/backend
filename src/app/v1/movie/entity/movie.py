@@ -2,6 +2,7 @@ from tortoise import fields, models
 from src.common.models.base_model import BaseModel
 from src.common.models.consts import MovieGenreEnum, MovieStatusEnum, MovieAgeRatingEnum
 
+
 class Movie(BaseModel, models.Model):
     id = fields.IntField(pk=True)
     title = fields.CharField(max_length=30)

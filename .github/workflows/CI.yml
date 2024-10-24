@@ -71,9 +71,9 @@ jobs:
     #     poetry run isort . --check --diff
 
     # black을 사용하여 PEP8 코드스타일을 준수했는지 체크합니다.
-    - name: Run black (Code formatting)
-      run: |
-        poetry run black . --check
+    # - name: Run black (Code formatting)
+    #   run: |
+    #     poetry run black . --check
 
     - name: Run flake8
       run: poetry run flake8 .

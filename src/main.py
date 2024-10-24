@@ -9,7 +9,6 @@ app.include_router(api_router)
 api_router = APIRouter(prefix="/api/v1")
 
 
-
 @app.on_event("startup")
 async def startup_event():
     await database_initialize(app)
