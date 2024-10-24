@@ -3,6 +3,7 @@
 name: FastAPI CD
 
 on:
+  #해당 작업은 CI 완료 후
   workflow_run:
     workflows: ["FastAPI CI"]
     types:
