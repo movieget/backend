@@ -16,7 +16,6 @@ class Refund(BaseModel, models.Model):
         return f"Refund {self.refund_id}: {self.refund_amount} ({self.refund_status})"
 
 
-
 # Payment 모델에 역참조 타입 힌트 추가
 # Payment 모델에 역참조 타입 힌트 추가
 # Payment.refunds: fields.ReverseRelation[Refund]

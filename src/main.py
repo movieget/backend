@@ -7,8 +7,6 @@ app = FastAPI()
 app.include_router(api_router)
 
 api_router = APIRouter(prefix="/api/v1")
-# database_initialize(app)
-
 
 
 @app.on_event("startup")

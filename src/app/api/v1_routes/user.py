@@ -76,7 +76,6 @@ async def read_me(token: str = Depends(oauth2_scheme)):
         phone_number=user.phone_number or "",
         oauth_provider=user.oauth_provider or "",
         image_url=user.image_url or "",
-
     )
 
 
