@@ -13,8 +13,11 @@ ENV POETRY_HOME="/opt/poetry" \
 ENV PATH="$POETRY_HOME/bin:$PATH"
 RUN curl -sSL https://install.python-poetry.org | python3 -
 
+# PYTHONPATH 설정
+ENV PYTHONPATH=/app/src:$PYTHONPATH
+
 # 작업 디렉토리 설정
-WORKDIR /app
+WORKDIR /app/src
 
 # Poetry 설정 파일 복사
 COPY pyproject.toml poetry.lock ./
@@ -33,7 +36,7 @@ COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/pytho
 COPY --from=builder /usr/local/bin /usr/local/bin
 
 # 애플리케이션 코드 복사
-COPY . .
+COPY ./src .
 
 # 비루트 사용자 생성 및 전환
 RUN useradd -m -u 1000 appuser && \
