@@ -1,0 +1,14 @@
+.idea
+.vscode
+terraform
+.github
+migrations
+.gitmessage.txt
+.git
+.gitignore
+.dockerignore
+Dockerfile
+*.md
+*.sh
+*.yml
+scripts

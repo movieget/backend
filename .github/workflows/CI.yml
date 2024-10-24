@@ -6,31 +6,33 @@ name: FastAPI CI
 on:
   push:
     branches: 
-        - main
+        - develop
+        - release
+
   pull_request:
     branches:
-        - main
+        - develop
+        - release
 
 jobs:
   ci:
     runs-on: ubuntu-latest
-    # services 키워드를 사용하여 PostgreSQL 서비스를 설정
+
     services:
       db:
-        image: postgres:17
+        image: mysql:latest
         ports:
-          - 5432:5432
-        # Github Secrets에서 가져와서 env로 등록, Postgres 데이터 베이스 연결 설정
+          - 3306:3306
         env:
-          POSTGRES_USER: ${{ secrets.DB_USER }}
-          POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          POSTGRES_DB: ${{ secrets.DB_NAME }}
-        # 옵션으로 postgres의 연결 상태를 확인. 10초 단위로 5번 재시도. 5초간 기다림.
+          MYSQL_USER: ${{ secrets.DB_USER }}
+          MYSQL_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          MYSQL_DB: ${{ secrets.DB_NAME }}
+
         options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeou=5s
+          --health-retries=5
 
     # CI 환경에서 코드를 체크아웃합니다.
     steps:
@@ -39,7 +41,7 @@ jobs:
 
     # CI 환경에서 사용할 파이썬 버젼을 지정합니다.
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.12.7'
 
@@ -78,17 +80,20 @@ jobs:
     # - name: Run mypy
     #   run: poetry run mypy .
 
+    - name: Run pylint
+      run: poetry run pylint **/*.py
+
     - name: Run pytest
-      run: poetry run pytest tests/ --cov=app --cov-report=xml
+      run: |
+        poetry run pytest tests/ --doctest-modules --junitxml=junit/test-results.xml --cov=app --cov-report=xml --cov-report=html
+      env:
+        DB_HOST: 127.0.0.1
+        DB_PORT: 3306
+        DB_USER: root
+        DB_PASSWORD: rootpassword
+        DB_NAME: testdb
 
     # - name: Upload coverage reports to Codecov
     #   uses: codecov/codecov-action@v3
     #   env:
     #     CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-
-    # db 연결을 테스트
-    - name: Wait for PostgreSQL
-      run: |
-        until pg_isready -h localhost -p ${{ secrets.DB_PORT }} -U ${{ secrets.DB_USER }}; do
-          sleep 1
-        done     

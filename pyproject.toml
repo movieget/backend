@@ -16,6 +16,7 @@ aiomysql = "0.2.0"
 python-dotenv = "1.0.1"
 pydantic = "2.9.2"
 pydantic-settings = "2.5.2"
+gunicorn = "^23.0.0"
 
 [tool.black]
 line-length = 150
