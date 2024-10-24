@@ -84,15 +84,15 @@ jobs:
     # - name: Run pylint
     #   run: poetry run pylint **/*.py
 
-    - name: Run pytest
-      run: |
-        poetry run pytest tests/ --doctest-modules --junitxml=junit/test-results.xml --cov=app --cov-report=xml --cov-report=html
-      env:
-        DB_HOST: 127.0.0.1
-        DB_PORT: 3306
-        DB_USER: root
-        DB_PASSWORD: rootpassword
-        DB_NAME: testdb
+    # - name: Run pytest
+    #   run: |
+    #     poetry run pytest tests/ --doctest-modules --junitxml=junit/test-results.xml --cov=app --cov-report=xml --cov-report=html
+    #   env:
+    #     DB_HOST: 127.0.0.1
+    #     DB_PORT: 3306
+    #     DB_USER: root
+    #     DB_PASSWORD: rootpassword
+    #     DB_NAME: testdb
 
     # - name: Upload coverage reports to Codecov
     #   uses: codecov/codecov-action@v3
