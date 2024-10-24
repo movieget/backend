@@ -33,9 +33,12 @@ jobs:
       with:
         context: .
         file: ./Dockerfile
+        platforms: linux/amd64,linux/arm64
         push: true
         tags: |
           ${{ secrets.DOCKERHUB_USERNAME }}/fastapi-app:${{ github.ref_name }}-latest
+        cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/fastapi-app:buildcache
+        cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/fastapi-app:buildcache,mode=max
 
   deploy-to-ec2:
     needs: build-and-push
