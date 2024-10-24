@@ -24,6 +24,7 @@ jobs:
         ports:
           - 3306:3306
         env:
+          MYSQL_ROOT_PASSWORD: ${{ secrets.DB_ROOT_PASSWORD }}
           MYSQL_USER: ${{ secrets.DB_USER }}
           MYSQL_PASSWORD: ${{ secrets.DB_PASSWORD }}
           MYSQL_DB: ${{ secrets.DB_NAME }}
