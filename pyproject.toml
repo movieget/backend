@@ -17,6 +17,7 @@ python-dotenv = "1.0.1"
 pydantic = "2.9.2"
 pydantic-settings = "2.5.2"
 gunicorn = "23.0.0"
+aiohttp = "3.10.10"
 
 [tool.black]
 line-length = 150
