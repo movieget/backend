@@ -1,5 +1,5 @@
 # Python 3.12.7 공식 이미지를 기반으로 함
-FROM python:3.12.7-slim as builder
+FROM python:3.12.7-slim AS builder
 
 # 필요한 시스템 패키지 설치
 RUN apt-get update && apt-get install -y \
