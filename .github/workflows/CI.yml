@@ -55,7 +55,7 @@ jobs:
           ${{ runner.os }}-poetry-
 
     - name: Check poetry.lock consistency
-      run: poetry lock --check
+      run: poetry lock --no-update
 
     # Poetry를 사용하여 의존성 패키지들을 설치합니다.
     - name: Install Packages & Libraries

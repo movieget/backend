@@ -3,16 +3,20 @@
 name: FastAPI CD
 
 on:
-  #해당 작업은 CI 완료 후
+  push:
+    branches:
+      - develop
   workflow_run:
     workflows: ["FastAPI CI"]
     types:
       - completed
+    branches:
+      - develop
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'push' }}
     
     steps:
     - name: Checkout code

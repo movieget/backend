@@ -22,8 +22,11 @@ WORKDIR /app/src
 # Poetry 설정 파일 복사
 COPY pyproject.toml poetry.lock ./
 
+# poetry.lock 파일 업데이트
+RUN poetry lock --no-update
+
 # 프로덕션 종속성만 설치
-RUN poetry install --no-dev --no-interaction --no-ansi
+RUN poetry install --only main --no-interaction --no-ansi
 
 # 실제 운영 이미지 생성
 FROM python:3.12.7-slim
