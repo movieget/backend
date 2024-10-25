@@ -7,7 +7,7 @@ project_root = Path(__file__).parent.parent
 sys.path.append(str(project_root))
 
 from src.core.database.connection import database_initialize
-from app.api.root_routes import api_router
+from src.app.api.root_routes import api_router
 
 app = FastAPI()
 app.include_router(api_router)
