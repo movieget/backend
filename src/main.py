@@ -1,7 +1,13 @@
 from fastapi import APIRouter, FastAPI
+import sys
+from pathlib import Path
+
+# 프로젝트 루트 디렉토리를 sys.path에 추가
+project_root = Path(__file__).parent.parent
+sys.path.append(str(project_root))
 
 from src.core.database.connection import database_initialize
-from src.app.api.root_routes import api_router
+from app.api.root_routes import api_router
 
 app = FastAPI()
 app.include_router(api_router)
