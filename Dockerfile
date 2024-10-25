@@ -36,7 +36,10 @@ COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/pytho
 COPY --from=builder /usr/local/bin /usr/local/bin
 
 # 애플리케이션 코드 복사
-COPY ./src .
+COPY ./src /app/src
+
+# PYTHONPATH 설정
+ENV PYTHONPATH=/app:$PYTHONPATH
 
 # 비루트 사용자 생성 및 전환
 RUN useradd -m -u 1000 appuser && \
@@ -48,4 +51,4 @@ ENV PORT=8000
 EXPOSE 8000
 
 # 서버 실행
-CMD ["gunicorn", "main:app", "-w", "3", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000"]
+CMD ["gunicorn", "src.main:app", "-w", "3", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000"]

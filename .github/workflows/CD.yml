@@ -8,9 +8,6 @@ on:
     workflows: ["FastAPI CI"]
     types:
       - completed
-  push:
-    branches:
-      - develop
 
 jobs:
   build-and-push:
