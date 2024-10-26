@@ -26,7 +26,7 @@ async def book_options(screening_date: date, user_id: int = Query(None)):
         # 회원일 경우 예약(book_id) 생성
         book_id = None
         if user_id is not None:
-            new_booking = await create_new_booking(user_id=user_id, screen_info_id=screen_info_id)
+            new_booking = await create_new_booking(user_id=user_id)
             book_id = new_booking.id
 
         # MovieOption 생성

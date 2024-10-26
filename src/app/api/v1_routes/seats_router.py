@@ -3,13 +3,14 @@ from fastapi import APIRouter, HTTPException, Depends
 from typing import List, Dict
 from src.app.v1.screen.entity.seat import Seat
 from src.app.v1.book.schemas.book import SeatLayoutResponse, Row, SeatResponse
-from src.app.v1.user.dependencies import get_current_user
-from src.app.v1.user.entity.user import User
+# from src.app.v1.user.dependencies import get_current_user
+# from src.app.v1.user.entity.user import User
 
 router = APIRouter()
 
 @router.get("/{screen_id}", response_model=SeatLayoutResponse)
-async def get_seat_layout(screen_id: int, user: User = Depends(get_current_user)):
+async def get_seat_layout(screen_id: int):
+# async def get_seat_layout(screen_id: int, user: User = Depends(get_current_user)):
     # 좌석 데이터를 불러오기
     seats = await Seat.filter(screen_id=screen_id).order_by("row", "column").all()
 

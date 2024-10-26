@@ -2,13 +2,13 @@ from fastapi import APIRouter, HTTPException, Depends
 from src.app.v1.book.service.book_service import get_completed_bookings_by_user_id
 from src.app.v1.book.schemas.book import BookResponse
 from typing import List
-from src.app.v1.user.dependencies import get_current_user
 from src.app.v1.user.entity.user import User
 
 router = APIRouter()
 
 @router.get("/completed", response_model=List[BookResponse])
-async def get_completed_bookings(user: User = Depends(get_current_user)):
+async def get_completed_bookings(user: User):
+# async def get_completed_bookings(user: User = Depends(get_current_user)):
     try:
         # 유저가 예약한 모든 'COMPLETED' 상태의 예약 정보를 가져옴
         bookings = await get_completed_bookings_by_user_id(user.id)
