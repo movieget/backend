@@ -1,4 +1,4 @@
-# src/app/v1/payment/api/payment_routes.py
+
 from fastapi import APIRouter, HTTPException
 from src.app.v1.payment.service.payment_service import initiate_payment
 from src.app.v1.book.repository import book_repository
@@ -7,7 +7,7 @@ from src.app.v1.book.schemas.book import PaymentResponse
 
 router = APIRouter()
 
-@router.post("/payment", response_model=PaymentResponse)
+@router.post("/tosspay", response_model=PaymentResponse)
 async def create_reservation_and_redirect_to_payment(booking_data: BookRequest):
     try:
         # 임시 예약 저장 (PENDING 상태)
