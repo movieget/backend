@@ -13,3 +13,8 @@ async def database_initialize(app: FastAPI) -> None:
         add_exception_handlers=True,
     )
     await Tortoise.generate_schemas()
+
+
+async def init_db():
+    await Tortoise.init(config=TORTOISE_ORM)
+    await Tortoise.generate_schemas()  # 스키마 생성
