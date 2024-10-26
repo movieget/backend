@@ -16,8 +16,7 @@ screen_rules = {
         "seats_per_row": 14,
         "skip_seats_per_row": {
             'A': [0, 1, 12, 13], 'B': [0, 1, 12, 13], 'C': [0, 13],
-            'D': [], 'E': [], 'F': [], 'G': [], 'H': [],
-            'I': [], 'J': [6, 7]
+            'J': [6, 7]
         }
     },
     3: {
@@ -64,12 +63,6 @@ screen_rules = {
         }
     },
     8: {
-        "rows": ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"],
-        "seats_per_row": 18,
-        "skip_seats_per_row": {
-        }
-    },
-    9: {
         "rows": ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N"],
         "seats_per_row": 20,
         "skip_seats_per_row": {
@@ -80,8 +73,8 @@ screen_rules = {
 
         }
     },
-    10: {
-        "rows": ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"],
+    9: {
+        "rows": ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"],
         "seats_per_row": 11,
         "skip_seats_per_row": {
             'A': [9, 10, 11], 'B': [9, 10, 11], 'C': [9, 10, 11],
