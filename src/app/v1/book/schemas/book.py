@@ -79,6 +79,7 @@ class PaymentResponse(BaseModel):
 # 예매 요청 DTO
 class BookRequest(BaseModel):
     model_config = ConfigDict(from_attributes=True)
+    user_id: int
     screening_date: date  # 상영 날짜 (YYYY-MM-DD 형식)
     movie_id: int  # 영화 ID
     location_id: int # 지역 ID

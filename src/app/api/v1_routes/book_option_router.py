@@ -15,19 +15,22 @@ from src.app.v1.book.schemas.book import (
 
 router = APIRouter()
 
+#여기도 회원일 경우에 들어오는 방법도 있으므로 access token을 통해 인증 -> 리팩토링
 @router.get("/options", response_model=BookOptionsResponse)
 async def book_options(screening_date: date, user_id: int = Query(None)):
     try:
-        # 영화, 지역, 영화관, 상영시간 조회를 비동기 호출
+        # 특정 날짜로 조회
         movies = await get_movies_by_date(screening_date)
         if not movies:
             raise HTTPException(status_code=404, detail="해당 날짜에 상영하는 영화를 찾을 수 없습니다.")
 
-        # 회원일 경우 예약(book_id) 생성
-        book_id = None
+        # 로그인 상태에 따라 book_id 생성 (회원은 실제 book_id, 비회원은 임시 book_id)
         if user_id is not None:
-            new_booking = await create_new_booking(user_id=user_id)
-            book_id = new_booking.id
+            new_booking = await create_new_booking(user_id=user_id, is_temporary=False)
+        else:
+            new_booking = await create_new_booking(user_id=None, is_temporary=True)
+        book_id = new_booking.id
+
 
         # MovieOption 생성
         movie_options = [
@@ -70,7 +73,7 @@ async def book_options(screening_date: date, user_id: int = Query(None)):
                     all_screenings.extend(screening_options)
 
         return BookOptionsResponse(
-            book_id=book_id,  # 회원일 경우에만 book_id 반환
+            book_id=book_id,
             movies=movie_options,
             locations=all_locations,
             cinemas=all_cinemas,
