@@ -1,5 +1,5 @@
 # src/app/v1/screen/api/seat_routes.py
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Query
 from typing import List, Dict
 from src.app.v1.screen.entity.seat import Seat
 from src.app.v1.book.schemas.book import SeatLayoutResponse, Row, SeatResponse
@@ -9,9 +9,8 @@ from src.app.v1.book.schemas.book import SeatLayoutResponse, Row, SeatResponse
 router = APIRouter()
 
 @router.get("/{screen_id}", response_model=SeatLayoutResponse)
-async def get_seat_layout(screen_id: int):
+async def get_seat_layout(screen_id: int, user_id: int =Query(...)):
 # async def get_seat_layout(screen_id: int, user: User = Depends(get_current_user)):
-    # 좌석 데이터를 불러오기
     seats = await Seat.filter(screen_id=screen_id).order_by("row", "column").all()
 
     if not seats:

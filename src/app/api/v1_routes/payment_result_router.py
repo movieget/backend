@@ -8,7 +8,8 @@ router = APIRouter()
 
 
 @router.post("/payment/success", response_model=PaymentUpdateResponse)
-async def payment_success(booking_id: int, user: User = Depends(get_current_user)):
+async def payment_success(booking_id: int):
+# async def payment_success(booking_id: int, user: User = Depends(get_current_user)):
 
     try:
         booking = await book_repository.get_booking_by_id(booking_id)

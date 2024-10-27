@@ -1,4 +1,6 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Query
+
+
 from src.app.v1.book.service.book_service import get_canceled_bookings_by_user_id
 from src.app.v1.book.schemas.book import BookResponse
 from typing import List
@@ -7,11 +9,11 @@ from src.app.v1.user.entity.user import User
 router = APIRouter()
 
 @router.get("/fail", response_model=List[BookResponse])
-async def get_user_canceled_bookings(user: User ):
+async def get_user_canceled_bookings(user_id: int =Query(None)):
 # async def get_user_canceled_bookings(user: User = Depends(get_current_user)):
     try:
         # 유저가 취소한 모든 예약 정보를 가져옴
-        canceled_bookings = await get_canceled_bookings_by_user_id(user.id)
+        canceled_bookings = await get_canceled_bookings_by_user_id(user_id)
 
         # 취소된 예약 정보가 없을 경우 404 처리
         if not canceled_bookings:

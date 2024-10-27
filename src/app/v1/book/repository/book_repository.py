@@ -11,17 +11,16 @@ from src.app.v1.book.entity.book import Book
 from src.app.v1.book.entity.bookseat import BookSeat
 from src.app.v1.screen.entity.seat import Seat
 
-# 예약 (book_id) 생성
-async def create_new_booking(user_id: int, screen_info_id: int):
+# 예약 (book_id) 생성(회원, 로그인 안 한 회원, 비회원)
+async def create_new_booking(user_id: int =None, is_temporary: bool =False):
     new_booking = await Book.create(
         user_id=user_id,
-        screen_info_id=screen_info_id,
-        status="PENDING"
+        is_temporary=is_temporary,
     )
     return new_booking
 
 
-# 특정 날짜에 상영하는 영화 목록 조회
+# 특정 날짜에 상영하는 영화 목록 조회 -> 맨 처음 날짜 정보를 불러오는 request
 async def get_movies_by_date(screening_date: date):
     return await Movie.filter(screen_infos__screening_date=screening_date).distinct().values("id", "title", "genre", "duration", "age_rating", "poster_image_url")
 
