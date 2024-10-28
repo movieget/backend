@@ -3,10 +3,8 @@ import os
 import aiohttp
 import httpx
 
-KAKAO_TOKEN_URL = "https://kauth.kakao.com/oauth/token"
 
-
-async def get_kakao_access_token(code: str) -> str | None:
+async def get_kakao_token(code: str) -> str | None:
     url = "https://kauth.kakao.com/oauth/token"
     params = {
         "grant_type": "authorization_code",
@@ -21,7 +19,8 @@ async def get_kakao_access_token(code: str) -> str | None:
 
         if response.status_code != 200:
             return None
-        return response_data.get("access_token")
+
+        return response_data
 
 
 async def get_kakao_user_info(access_token: str):
