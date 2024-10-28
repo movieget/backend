@@ -36,12 +36,12 @@ class MoviePriceEnum(int, Enum):  # IntEnum으로 사용해야 함
 
 
 class MovieGenreEnum(str, Enum):
-    ACTION = "Action"
-    DRAMA = "Drama"
-    COMEDY = "Comedy"
-    HORROR = "Horror"
-    SCIFI = "Sci-Fi"
-    ROMANCE = "Romance"
+    ACTION = "ACTION"
+    DRAMA = "DRAMA"
+    COMEDY = "COMEDY"
+    HORROR = "HORROR"
+    SCIFI = "SCIFI"
+    ROMANCE = "ROMANCE"
 
 
 class MovieStatusEnum(str, Enum):
