@@ -1,13 +1,8 @@
 import redis
-from typing import Optional
-from datetime import timedelta
+from redis.asyncio import from_url
 
 # Redis 연결 설정
-redis_client = redis.Redis(
-    host="localhost",  # 또는 Docker 사용 시 Redis 컨테이너 이름 사용
-    port=6379,
-    decode_responses=True  # 문자열 응답 디코딩
-)
+redis_client = from_url("redis://localhost", decode_responses=True)
 
 
 # Redis 연결 테스트
