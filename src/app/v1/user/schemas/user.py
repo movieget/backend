@@ -1,5 +1,4 @@
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -44,6 +43,7 @@ from pydantic import BaseModel, Field
 
 
 class UserResponseSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: int
     username: str
     email: str
@@ -55,13 +55,11 @@ class UserResponseSchema(BaseModel):
 
     # 추가적인 필드를 여기에 추가할 수 있습니다.
 
-    class Config:
-        orm_mode = True
-
 
 class UserUpdateSchema(BaseModel):
-    nickname: Optional[str] = Field(None, description="사용자 닉네임")
-    phone_number: Optional[str] = Field(None, description="전화번호")
-    birthday: Optional[str] = Field(None, description="생일")
-    image_url: Optional[str] = Field(None, description="프로필 이미지 URL")
-    email: Optional[EmailStr] = Field(None, description="이메일 주소")
+    model_config = ConfigDict(from_attributes=True)
+    nickname: str | None = Field(None, description="사용자 닉네임")
+    phone_number: str | None = Field(None, description="전화번호")
+    birthday: str | None = Field(None, description="생일")
+    image_url: str | None = Field(None, description="프로필 이미지 URL")
+    email: EmailStr | None = Field(None, description="이메일 주소")
