@@ -1,3 +1,4 @@
+from datetime import timedelta
 import os
 
 from dotenv import load_dotenv
@@ -57,7 +58,8 @@ class Settings:
     KAKAO_REDIRECT_URI = os.getenv("KAKAO_REDIRECT_URI")
     SECRET_KEY = os.getenv("SECRET_KEY")
     ALGORITHM = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES = 30
+    ACCESS_TOKEN_EXPIRE_MINUTES = timedelta(minutes=15)
+    REFRESH_TOKEN_EXPIRE_DAYS = timedelta(days=7)
 
 
 settings = Settings()
