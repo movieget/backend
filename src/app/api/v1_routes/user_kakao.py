@@ -48,16 +48,10 @@ async def kakao_login(code: str, response: Response):
     if user:
         # 사용자가 DB에 있다면
         # JWT 토큰 발행 (액세스토큰)    15분
-        jwt_access_token = create_jwt_token(
-            {"id": user.id, "type": "access"},
-            expires_delta=settings.ACCESS_TOKEN_EXPIRE_MINUTES
-        )
+        jwt_access_token = create_jwt_token({"id": user.id, "type": "access"}, expires_delta=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
 
         # 리프레쉬 토큰 생성 필요함 (액세스토큰 발급을 위한 리프레쉬토큰) 1시간
-        jwt_refresh_token = create_jwt_token(
-            {"id": user.id, "type": "refresh"},
-            expires_delta=settings.REFRESH_TOKEN_EXPIRE_DAYS
-        )
+        jwt_refresh_token = create_jwt_token({"id": user.id, "type": "refresh"}, expires_delta=settings.REFRESH_TOKEN_EXPIRE_DAYS)
         jti = decode_jwt_token(jwt_refresh_token).get("jti")
 
         # 쿠키에 JWT 리프레시 토큰 및 전달값 설정
@@ -65,22 +59,33 @@ async def kakao_login(code: str, response: Response):
             key="refresh_token",
             value=jwt_refresh_token,
             httponly=True,  # JavaScript로 접근 불가
-            secure=False,    # HTTPS에서만 동작 (로컬 테스트 시 False)
-            max_age=3600,   # 쿠키 만료 시간 (초 단위) ** 5분~10분 설정 필요
-            samesite="lax"  # 동일 사이트 정책
+            secure=False,  # HTTPS에서만 동작 (로컬 테스트 시 False)
+            max_age=3600,  # 쿠키 만료 시간 (초 단위) ** 5분~10분 설정 필요
+            samesite=None,  # 동일 사이트 정책
         )
         response.set_cookie(
             key="access_token",
             value=jwt_access_token,
-            httponly=True
+            httponly=True,  # JavaScript로 접근 불가
+            secure=False,  # HTTPS에서만 동작 (로컬 테스트 시 False)
+            max_age=3600,  # 쿠키 만료 시간 (초 단위) ** 5분~10분 설정 필요
+            samesite=None,  # 동일 사이트 정책
         )
         response.set_cookie(
             key="user_id",
-            value=user.id
+            value=user.id,
+            httponly=True,  # JavaScript로 접근 불가
+            secure=False,  # HTTPS에서만 동작 (로컬 테스트 시 False)
+            max_age=3600,  # 쿠키 만료 시간 (초 단위) ** 5분~10분 설정 필요
+            samesite=None,  # 동일 사이트 정책
         )
         response.set_cookie(
             key="profile_url",
-            value=user.image_url
+            value=user.image_url,
+            httponly=True,  # JavaScript로 접근 불가
+            secure=False,  # HTTPS에서만 동작 (로컬 테스트 시 False)
+            max_age=3600,  # 쿠키 만료 시간 (초 단위) ** 5분~10분 설정 필요
+            samesite=None,  # 동일 사이트 정책
         )
 
         # 레디스에 "자체 리프레시 토큰"과 "카카오액세스토큰(로그아웃시 필요함)" 저장
@@ -105,20 +110,14 @@ async def kakao_login(code: str, response: Response):
                 phone_number=phone_number,
                 oauth_provider=oauth_provider,
                 image_url=image_url,
-                kakao_id=kakao_id
+                kakao_id=kakao_id,
             )
 
             # JWT 토큰 발행 (액세스토큰)    15분
-            jwt_access_token = create_jwt_token(
-                {"id": user.id, "type": "access"},
-                expires_delta=settings.ACCESS_TOKEN_EXPIRE_MINUTES
-            )
+            jwt_access_token = create_jwt_token({"id": user.id, "type": "access"}, expires_delta=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
 
             # 리프레쉬 토큰 생성 필요함 (액세스토큰 발급을 위한 리프레쉬토큰) 1시간
-            jwt_refresh_token = create_jwt_token(
-                {"id": user.id, "type": "refresh"},
-                expires_delta=settings.REFRESH_TOKEN_EXPIRE_DAYS
-            )
+            jwt_refresh_token = create_jwt_token({"id": user.id, "type": "refresh"}, expires_delta=settings.REFRESH_TOKEN_EXPIRE_DAYS)
             jti = decode_jwt_token(jwt_refresh_token).get("jti")
 
             # 쿠키에 JWT 리프레시 토큰 및 전달값 설정
@@ -128,20 +127,31 @@ async def kakao_login(code: str, response: Response):
                 httponly=True,  # JavaScript로 접근 불가
                 secure=False,  # HTTPS에서만 동작 (로컬 테스트 시 False)
                 max_age=3600,  # 쿠키 만료 시간 (초 단위) ** 5분~10분 설정 필요
-                samesite="lax"  # 동일 사이트 정책
+                samesite=None,  # 동일 사이트 정책
             )
             response.set_cookie(
                 key="access_token",
                 value=jwt_access_token,
-                httponly=True
+                httponly=True,  # JavaScript로 접근 불가
+                secure=False,  # HTTPS에서만 동작 (로컬 테스트 시 False)
+                max_age=3600,  # 쿠키 만료 시간 (초 단위) ** 5분~10분 설정 필요
+                samesite=None,  # 동일 사이트 정책
             )
             response.set_cookie(
                 key="user_id",
-                value=user.id
+                value=user.id,
+                httponly=True,  # JavaScript로 접근 불가
+                secure=False,  # HTTPS에서만 동작 (로컬 테스트 시 False)
+                max_age=3600,  # 쿠키 만료 시간 (초 단위) ** 5분~10분 설정 필요
+                samesite=None,  # 동일 사이트 정책
             )
             response.set_cookie(
                 key="profile_url",
-                value=user.image_url
+                value=user.image_url,
+                httponly=True,  # JavaScript로 접근 불가
+                secure=False,  # HTTPS에서만 동작 (로컬 테스트 시 False)
+                max_age=3600,  # 쿠키 만료 시간 (초 단위) ** 5분~10분 설정 필요
+                samesite=None,  # 동일 사이트 정책
             )
 
             # 레디스에 "자체 리프레시 토큰"과 "카카오액세스토큰(로그아웃시 필요함), 카카오리프레시토큰" 저장
