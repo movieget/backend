@@ -97,7 +97,8 @@ async def kakao_login(code: str, response: Response):
             raise HTTPException(status_code=500, detail="Redis 저장 실패")
 
         # 프론트 페이지로 리다이렉트
-        return RedirectResponse(url="http://localhost:5173/kakao/callback", status_code=302)
+        response = RedirectResponse(url="http://localhost:5173/kakao/callback", status_code=302)
+        return response
 
     else:
         try:
@@ -163,7 +164,8 @@ async def kakao_login(code: str, response: Response):
                 raise HTTPException(status_code=500, detail="Redis 저장 실패")
 
             # 프론트 페이지로 리다이렉트
-            return RedirectResponse(url="http://localhost:5173/kakao/callback", status_code=302)
+            response = RedirectResponse(url="http://localhost:5173/kakao/callback", status_code=302)
+            return response
 
         except DBConnectionError:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="데이터베이스 연결 오류입니다.")
