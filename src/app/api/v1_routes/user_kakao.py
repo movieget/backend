@@ -46,9 +46,6 @@ async def kakao_login(code: str, response: Response):
 
     user = await user_repository.get_kakao_user(kakao_id=kakao_id)
 
-    # 프론트 페이지로 리다이렉트
-    # response = RedirectResponse(url="http://localhost:5173/kakao/callback", status_code=302)
-
     if user:
         # 사용자가 DB에 있다면
         # JWT 토큰 발행 (액세스토큰)    15분
@@ -58,7 +55,8 @@ async def kakao_login(code: str, response: Response):
         jwt_refresh_token = create_jwt_token({"id": user.id, "type": "refresh"}, expires_delta=settings.REFRESH_TOKEN_EXPIRE_DAYS)
         jti = decode_jwt_token(jwt_refresh_token).get("jti")
 
-        response = JSONResponse(content={"detail": "login success"}, status_code=status.HTTP_200_OK)
+        response = RedirectResponse(url="http://localhost:5173/kakao/callback", status_code=302)
+        # response = JSONResponse(content={"detail": "login success"}, status_code=status.HTTP_200_OK)
 
         # 쿠키에 JWT 리프레시 토큰 및 전달값 설정
         response.set_cookie(
@@ -125,7 +123,8 @@ async def kakao_login(code: str, response: Response):
             jwt_refresh_token = create_jwt_token({"id": user.id, "type": "refresh"}, expires_delta=settings.REFRESH_TOKEN_EXPIRE_DAYS)
             jti = decode_jwt_token(jwt_refresh_token).get("jti")
 
-            response = JSONResponse(content={"detail": "login Fail"}, status_code=status.HTTP_404_NOT_FOUND)
+            response = RedirectResponse(url="http://localhost:5173/kakao/callback", status_code=302)
+            # response = JSONResponse(content={"detail": "login Fail"}, status_code=status.HTTP_404_NOT_FOUND)
 
             # 쿠키에 JWT 리프레시 토큰 및 전달값 설정
             response.set_cookie(
