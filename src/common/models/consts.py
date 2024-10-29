@@ -27,7 +27,7 @@ class RatingEnum(str, Enum):
 class StatusEnum(str, Enum):
     PENDING = "pending"  # 또는 대기 중
     COMPLETED = "completed"
-    CANCELLED = "cancelled"
+    CANCELED = "canceled"
 
 
 class MoviePriceEnum(int, Enum):  # IntEnum으로 사용해야 함
@@ -62,5 +62,5 @@ class MovieAgeRatingEnum(str, Enum):
     AGE_12 = "12"
     AGE_15 = "15"
     AGE_18 = "18"
-    AGE_19 = "19"
+
 
