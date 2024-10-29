@@ -14,6 +14,9 @@ tracemalloc.start()
 
 app = FastAPI(lifespan=lifespan)
 
+# NOTE: Turn off in Production
+# app = FastAPI(openapi_url=None)
+
 origins = ["*"]
 
 app.add_middleware(
