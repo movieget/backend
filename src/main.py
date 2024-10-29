@@ -1,4 +1,5 @@
 from fastapi import APIRouter, FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 import sys, tracemalloc
 from pathlib import Path
 
@@ -12,11 +13,26 @@ from src.common.handlers.db_handler import lifespan
 tracemalloc.start()
 
 app = FastAPI(lifespan=lifespan)
-app.include_router(root_router)
+
+origins = [
+    "http://localhost:5173",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 api_router = APIRouter(prefix="/api/v1")
 
-# 라우터 연결
+# root_router를 api_router에 포함
 api_router.include_router(root_router)
+
+# api_router를 app에 포함
+app.include_router(api_router)
 
 
 @app.get("/")

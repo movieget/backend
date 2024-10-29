@@ -1,68 +1,28 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from datetime import datetime
+
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer
-from tortoise.exceptions import DoesNotExist
+from jose import JWTError, jwt
 
 from src.app.v1.user.entity.user import User
 from src.app.v1.user.schemas.user import UserResponseSchema, UserUpdateSchema
-from src.app.v1.user.service.oauth_service import get_kakao_access_token, get_kakao_user_info
-from src.core.security import create_access_token, get_current_user
+from src.app.v1.user.service.redis import add_token_to_blacklist, get_kakao_access_token
+from src.app.v1.user.service.social_logout import logout_kakao_service
+from src.core.configs.database_config import settings
+from src.core.security import get_current_user
 
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
-@router.get("/login/kakao")
-async def kakao_login(code: str):
-    # 카카오 액세스 토큰 요청
-    access_token = await get_kakao_access_token(code)
-    if not access_token:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="카카오 인증 실패")
-
-    # 카카오 유저 정보 가져오기
-    kakao_user = await get_kakao_user_info(access_token)
-    if not kakao_user:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="카카오 유저 정보 조회 실패")
-
-    # 아래에 birthday 입력을 위한 변수 할당
-    birthyear = kakao_user.get("kakao_account", {}).get("birthyear")
-    birthdate = kakao_user.get("kakao_account", {}).get("birthday")
-
-    # 유저 정보를 항목별로 할당하기
-    username = kakao_user.get("kakao_account", {}).get("name")
-    email = kakao_user.get("kakao_account", {}).get("email")
-    nickname = kakao_user.get("properties", {}).get("nickname")
-    birthday = birthyear + birthdate
-    phone_number = kakao_user.get("kakao_account", {}).get("phone_number")
-    oauth_provider = "kakao"
-    image_url = kakao_user.get("properties", {}).get("thumbnail_image")
-    kakao_id = kakao_user.get("id")
-
-    # 사용자 조회 또는 생성
-    try:
-        user = await User.get(kakao_id=kakao_id)
-    except DoesNotExist:
-        pass
-    #     # 사용자 생성
-    #     user = await User.create(
-    #         username=username,
-    #         email=email,
-    #         nickname=nickname,
-    #         birthday=birthday,
-    #         phone_number=phone_number,
-    #         oauth_provider=oauth_provider,
-    #         image_url=image_url,
-    #         kakao_id=kakao_id,
-    #
-    #     )
-    #
-    # # JWT 토큰 발행
-    # token = create_access_token({"id": user.id})
-    # return {"access_token": token, "token_type": "bearer"}
-
-
+# 내 정보 조회
 @router.get("/me", response_model=UserResponseSchema)
-async def read_me(token: str = Depends(oauth2_scheme)):
-    user = await get_current_user(token)
+async def read_me(
+        request: Request,
+        access_token: str = Depends(oauth2_scheme)
+):
+    user = await get_current_user(request, access_token)
+
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
@@ -79,8 +39,12 @@ async def read_me(token: str = Depends(oauth2_scheme)):
     )
 
 
+# 내 정보 수정
 @router.patch("/me", response_model=UserResponseSchema)
-async def update_user(user_update: UserUpdateSchema, current_user: User = Depends(get_current_user)):
+async def update_user(
+        user_update: UserUpdateSchema,
+        current_user: User = Depends(get_current_user)
+):
     user = await User.get(id=current_user.id)
 
     # 수정할 항목이 None이 아닐 경우에만 업데이트
@@ -109,3 +73,52 @@ async def update_user(user_update: UserUpdateSchema, current_user: User = Depend
         oauth_provider=user.oauth_provider or "",
         image_url=user.image_url or "",
     )
+
+
+# 로그아웃
+@router.get("/logout/me")
+async def logout_me(
+        access_token: str = Depends(oauth2_scheme),
+        current_user=Depends(get_current_user),
+) -> dict:
+    # JWT 토큰을 Redis 블랙리스트 추가
+    try:
+        # JWT 디코딩 및 jti와 만료 시간 추출
+        payload = jwt.decode(access_token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        jti = payload.get("jti")
+        exp = payload.get("exp")
+        id = payload.get("id")
+
+        # Redis의 카카오액세스토큰 가져오기 (for 소셜 로그아웃)
+        kakao_access_token = await get_kakao_access_token(id=id)
+
+        if not jti or exp is None:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="유효하지 않은 토큰입니다.")
+
+        expires_in = exp - int(datetime.utcnow().timestamp())
+        if expires_in <= 0:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="만료된 토큰입니다.")
+
+        # 블랙리스트 추가
+        await add_token_to_blacklist(jti, expires_in)
+
+    except JWTError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="유효하지 않은 토큰입니다.")
+
+    # 소셜 로그아웃 요청
+    if current_user.oauth_provider == "kakao":
+        success = await logout_kakao_service(
+            provider=current_user.oauth_provider,
+            access_token=kakao_access_token,
+        )
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"{current_user.oauth_provider} 로그아웃 실패",
+            )
+
+    """다른 소셜 로그아웃 추가 가능"""
+
+    return {"message": "로그아웃 완료"}
+
+
