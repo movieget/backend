@@ -12,7 +12,7 @@ from src.common.handlers.db_handler import lifespan
 
 tracemalloc.start()
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(lifespan=lifespan, debug=True)
 
 # NOTE: Turn off in Production
 # app = FastAPI(openapi_url=None)
