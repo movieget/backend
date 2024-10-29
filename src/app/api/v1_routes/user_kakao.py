@@ -66,6 +66,7 @@ async def kakao_login(code: str, response: Response):
             secure=True,  # HTTPS에서만 동작 (로컬 테스트 시 False)
             max_age=3600,  # 쿠키 만료 시간 (초 단위) ** 5분~10분 설정 필요
             samesite="none",  # 동일 사이트 정책
+            domain="localhost",
         )
         response.set_cookie(
             key="access_token",
@@ -74,6 +75,7 @@ async def kakao_login(code: str, response: Response):
             secure=True,  # HTTPS에서만 동작 (로컬 테스트 시 False)
             max_age=3600,  # 쿠키 만료 시간 (초 단위) ** 5분~10분 설정 필요
             samesite="none",  # 동일 사이트 정책
+            domain="localhost",
         )
         response.set_cookie(
             key="user_id",
@@ -82,6 +84,7 @@ async def kakao_login(code: str, response: Response):
             secure=True,  # HTTPS에서만 동작 (로컬 테스트 시 False)
             max_age=3600,  # 쿠키 만료 시간 (초 단위) ** 5분~10분 설정 필요
             samesite="none",  # 동일 사이트 정책
+            domain="localhost",
         )
         response.set_cookie(
             key="profile_url",
@@ -90,6 +93,7 @@ async def kakao_login(code: str, response: Response):
             secure=True,  # HTTPS에서만 동작 (로컬 테스트 시 False)
             max_age=3600,  # 쿠키 만료 시간 (초 단위) ** 5분~10분 설정 필요
             samesite="none",  # 동일 사이트 정책
+            domain="localhost",
         )
 
         # 레디스에 "자체 리프레시 토큰"과 "카카오액세스토큰(로그아웃시 필요함)" 저장
@@ -134,6 +138,7 @@ async def kakao_login(code: str, response: Response):
                 secure=True,  # HTTPS에서만 동작 (로컬 테스트 시 False)
                 max_age=3600,  # 쿠키 만료 시간 (초 단위) ** 5분~10분 설정 필요
                 samesite="none",  # 동일 사이트 정책
+                domain="localhost",
             )
             response.set_cookie(
                 key="access_token",
@@ -142,6 +147,7 @@ async def kakao_login(code: str, response: Response):
                 secure=True,  # HTTPS에서만 동작 (로컬 테스트 시 False)
                 max_age=3600,  # 쿠키 만료 시간 (초 단위) ** 5분~10분 설정 필요
                 samesite="none",  # 동일 사이트 정책
+                domain="localhost",
             )
             response.set_cookie(
                 key="user_id",
@@ -150,6 +156,7 @@ async def kakao_login(code: str, response: Response):
                 secure=True,  # HTTPS에서만 동작 (로컬 테스트 시 False)
                 max_age=3600,  # 쿠키 만료 시간 (초 단위) ** 5분~10분 설정 필요
                 samesite="none",  # 동일 사이트 정책
+                domain="localhost",
             )
             response.set_cookie(
                 key="profile_url",
@@ -158,6 +165,7 @@ async def kakao_login(code: str, response: Response):
                 secure=True,  # HTTPS에서만 동작 (로컬 테스트 시 False)
                 max_age=3600,  # 쿠키 만료 시간 (초 단위) ** 5분~10분 설정 필요
                 samesite="none",  # 동일 사이트 정책
+                domain="localhost",
             )
 
             # 레디스에 "자체 리프레시 토큰"과 "카카오액세스토큰(로그아웃시 필요함), 카카오리프레시토큰" 저장
