@@ -8,7 +8,7 @@ from src.app.v1.book.schemas.responseDto import (BookOptionsResponse, SeatLayout
                                                  UpdateResponse, MovieOption, LocationOption, CinemaOption,
                                                  ScreeningOption, Row, SeatResponse, PaymentRedirectResponse,
                                                  CompletedBookingResponse, CancelledBookingResponse)
-from src.app.v1.book.service.book_service import get_book_options
+
 from src.app.v1.book.repository.book_repository import BookRepository
 from src.app.v1.screen.entity.seat import Seat
 from src.app.v1.user.repository.user_repository import UserRepository
