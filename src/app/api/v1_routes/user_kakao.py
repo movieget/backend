@@ -58,12 +58,7 @@ async def kakao_login(code: str, response: Response):
         jwt_refresh_token = create_jwt_token({"id": user.id, "type": "refresh"}, expires_delta=settings.REFRESH_TOKEN_EXPIRE_DAYS)
         jti = decode_jwt_token(jwt_refresh_token).get("jti")
 
-        response_data = {
-            "access_token": jwt_access_token,
-            "refresh_token": jwt_refresh_token,
-            "user_id": user.id,
-            "profile_url": user.image_url,
-        }
+        response = JSONResponse(content={"detail": "login success"}, status_code=status.HTTP_200_OK)
 
         # 쿠키에 JWT 리프레시 토큰 및 전달값 설정
         response.set_cookie(
@@ -107,7 +102,6 @@ async def kakao_login(code: str, response: Response):
         except RedisError:
             raise HTTPException(status_code=500, detail="Redis 저장 실패")
 
-        response = JSONResponse(content=response_data, status_code=200)
         return response
 
     else:
@@ -131,12 +125,7 @@ async def kakao_login(code: str, response: Response):
             jwt_refresh_token = create_jwt_token({"id": user.id, "type": "refresh"}, expires_delta=settings.REFRESH_TOKEN_EXPIRE_DAYS)
             jti = decode_jwt_token(jwt_refresh_token).get("jti")
 
-            response_data = {
-                "access_token": jwt_access_token,
-                "refresh_token": jwt_refresh_token,
-                "user_id": user.id,
-                "profile_url": user.image_url,
-            }
+            response = JSONResponse(content={"detail": "login success"}, status_code=status.HTTP_200_OK)
 
             # 쿠키에 JWT 리프레시 토큰 및 전달값 설정
             response.set_cookie(
@@ -180,7 +169,6 @@ async def kakao_login(code: str, response: Response):
             except RedisError:
                 raise HTTPException(status_code=500, detail="Redis 저장 실패")
 
-            response = JSONResponse(content=response_data, status_code=200)
             return response
 
         except DBConnectionError:
