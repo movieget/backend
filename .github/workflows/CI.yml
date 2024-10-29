@@ -53,21 +53,21 @@ jobs:
         curl -sSL https://install.python-poetry.org | python3 -
         echo "${HOME}/.local/bin" >> $GITHUB_PATH
 
-    - name: Cache Poetry dependencies
-      id: cache-deps
-      uses: actions/cache@v3
-      with:
-        path: ~/.cache/pypoetry
-        key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-poetry-
+    # - name: Cache Poetry dependencies
+    #   id: cache-deps
+    #   uses: actions/cache@v3
+    #   with:
+    #     path: ~/.cache/pypoetry
+    #     key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
+    #     restore-keys: |
+    #       ${{ runner.os }}-poetry-
 
     - name: Check poetry.lock consistency
       run: poetry lock --no-update
 
     # Poetry를 사용하여 의존성 패키지들을 설치합니다.
     - name: Install Packages & Libraries
-      if: steps.cache-deps.outputs.cache-hit != 'true'
+      # if: steps.cache-deps.outputs.cache-hit != 'true'
       run: poetry install --no-interaction --no-root
 
     # isort를 사용하여 import 구문의 정렬 순서를 체크합니다.

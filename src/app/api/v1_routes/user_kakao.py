@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from redis import RedisError
 from starlette import status
 from starlette.responses import RedirectResponse, Response
-from tortoise.exceptions import DBConnectionError, DoesNotExist
+from tortoise.exceptions import DBConnectionError
 
 from src.app.v1.user.service.oauth_service import get_kakao_token, get_kakao_user_info
 from src.app.v1.user.service.redis import save_kakao_access_token, save_kakao_refresh_token, save_refresh_token
@@ -46,7 +46,7 @@ async def kakao_login(code: str, response: Response):
     user = await user_repository.get_kakao_user(kakao_id=kakao_id)
 
     # 프론트 페이지로 리다이렉트
-    response = RedirectResponse(url="http://localhost:5173/kakao/callback", status_code=302)
+    # response = RedirectResponse(url="http://localhost:5173/kakao/callback", status_code=302)
 
     if user:
         # 사용자가 DB에 있다면
