@@ -7,7 +7,7 @@ from jose import jwt, JWTError
 from tortoise.exceptions import DoesNotExist
 
 from src.app.v1.user.entity.user import User
-from src.app.v1.user.service.redis import verify_refresh_token
+from src.app.v1.user.service.redis import is_token_blacklisted, verify_refresh_token
 from src.core.configs.database_config import settings
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -36,33 +36,45 @@ def decode_jwt_token(token: str):
 
 async def get_current_user(
         request: Request,   # 쿠키의 리프레시 토큰을 가져오기 위해
+        access_token: str = Depends(oauth2_scheme),     # 헤더의 엑세스토큰
 ) -> User:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
+    # 액세스 토큰의 블랙리스트 여부 확인
+    try:
+        payload = decode_jwt_token(access_token)
+        jti = payload.get("jti")
+        if await is_token_blacklisted(jti):
+            raise HTTPException(status_code=401, detail="Token blacklisted")
+
+        id = payload.get("id")
+    except JWTError:
+        raise credentials_exception
 
     # 쿠키에서 리프레시 토큰 가져오기
     refresh_token = request.cookies.get("refresh_token")
-    print(refresh_token)
-    # 리프레시토큰의 jti 가져오기
-    jti = decode_jwt_token(refresh_token).get("jti")
-    # 리프레시토큰의 사용자 id 가져오기
-    id = decode_jwt_token(refresh_token).get("id")
-    print(decode_jwt_token(refresh_token))
-    if refresh_token is None:
+    if not refresh_token:
         raise credentials_exception
 
+    # 리프레시 토큰 검증
     try:
         # 리프레시 토큰 검증
-        check = await verify_refresh_token(id=id, jti=jti)
-        if check is not True:
+        refresh_payload = decode_jwt_token(refresh_token)
+        refresh_jti = refresh_payload.get("jti")
+        refresh_user_id = refresh_payload.get("id")
+
+        if await verify_refresh_token(id=refresh_user_id, jti=refresh_jti) is not True:
             raise credentials_exception
 
         # 가져온 id로 사용자 조회
-        user = await User.get(id=id)
+        user = await User.get(id=refresh_user_id)
     except (JWTError, DoesNotExist):
+        raise credentials_exception
+    # 액세스 토큰과 리프레시 토큰의 사용자 id 일치 확인
+    if id != user.id:
         raise credentials_exception
 
     return user
