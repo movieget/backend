@@ -1,9 +1,8 @@
-from fastapi import APIRouter, HTTPException, Cookie
-from typing import Annotated
+from fastapi import APIRouter, HTTPException
 from redis import RedisError
 from starlette import status
-from fastapi.responses import JSONResponse
-from starlette.responses import RedirectResponse, Response
+from fastapi.responses import JSONResponse, Response
+from starlette.responses import RedirectResponse
 from tortoise.exceptions import DBConnectionError
 
 from src.app.v1.user.service.oauth_service import get_kakao_token, get_kakao_user_info
@@ -18,7 +17,7 @@ user_repository = UserRepository()
 
 # 카카오 로그인
 @router.get("/login/kakao")
-async def kakao_login(code: str, response: RedisError[Response, Cookie()]):
+async def kakao_login(code: str, response: Response):
     # 카카오 액세스 토큰과 리프레시 토큰 요청
     token = await get_kakao_token(code)
     access_token = token.get("access_token")
