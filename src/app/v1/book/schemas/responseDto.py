@@ -1,7 +1,8 @@
 from datetime import date, datetime, time
 
 from pydantic import BaseModel, ConfigDict
-from typing import List, Optional
+from typing import List, Optional, Literal
+
 
 class MovieOption(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -49,10 +50,8 @@ class UpdateResponse(BaseModel):
 
 class SeatResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    seat_number: int
     is_selected: bool
-    row: str
-    column: int
+
 
 class Row(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -106,13 +105,40 @@ class BookResponse(BaseModel):
     cinema: str  # 상영관 정보
 
 
-class PaymentUpdateResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+class PaymentRedirectResponse(BaseModel):
+    book_id: int
+    redirect_url: str
+
+class CompletedBookingResponse(BaseModel):
     booking_id: int
-    status: str
+    poster_url: str
+    title: str
+    duration: int
+    booking_date: str
+    screening_date: str
+    age_rating: Literal["all", "12", "15", "18"]
+    seats: List[str]
+    total_price: int
+    adult_count: int
+    child_count: int
+    screening_time: str
+    spot: str
+    cinema_name: str
+    screen_number: int
 
-
-
-
-
-
+class CancelledBookingResponse(BaseModel):
+    booking_id: int
+    poster_url: str
+    title: str
+    duration: int
+    booking_date: str
+    screening_date: str
+    age_rating: Literal["all", "12", "15", "18"]
+    seats: List[str]
+    total_price: int
+    adult_count: int
+    child_count: int
+    screening_time: str
+    spot: str
+    cinema_name: str
+    screen_number: int
