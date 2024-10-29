@@ -45,6 +45,9 @@ async def kakao_login(code: str, response: Response):
 
     user = await user_repository.get_kakao_user(kakao_id=kakao_id)
 
+    # 프론트 페이지로 리다이렉트
+    response = RedirectResponse(url="http://localhost:5173/kakao/callback", status_code=302)
+
     if user:
         # 사용자가 DB에 있다면
         # JWT 토큰 발행 (액세스토큰)    15분
@@ -96,8 +99,6 @@ async def kakao_login(code: str, response: Response):
         except RedisError:
             raise HTTPException(status_code=500, detail="Redis 저장 실패")
 
-        # 프론트 페이지로 리다이렉트
-        response = RedirectResponse(url="http://localhost:5173/kakao/callback", status_code=302)
         return response
 
     else:
@@ -162,9 +163,6 @@ async def kakao_login(code: str, response: Response):
                 await save_kakao_refresh_token(id=user.id, refresh_token=refresh_token)
             except RedisError:
                 raise HTTPException(status_code=500, detail="Redis 저장 실패")
-
-            # 프론트 페이지로 리다이렉트
-            response = RedirectResponse(url="http://localhost:5173/kakao/callback", status_code=302)
             return response
 
         except DBConnectionError:
