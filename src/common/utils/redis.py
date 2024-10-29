@@ -2,7 +2,7 @@ import redis
 from redis.asyncio import from_url
 
 # Redis 연결 설정
-redis_client = from_url("redis://localhost", decode_responses=True)
+redis_client = from_url("redis://localhost:6379", decode_responses=True)
 
 
 # Redis 연결 테스트
