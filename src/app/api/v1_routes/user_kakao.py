@@ -55,7 +55,7 @@ async def kakao_login(code: str, response: Response):
         jwt_refresh_token = create_jwt_token({"id": user.id, "type": "refresh"}, expires_delta=settings.REFRESH_TOKEN_EXPIRE_DAYS)
         jti = decode_jwt_token(jwt_refresh_token).get("jti")
 
-        response = RedirectResponse(url=f"http://localhost:5173/kakao/callback?user_id={user.id}", status_code=307)
+        response = Response({"id": user.id, "profile_image_url": user.image_url}, status_code=200)
         # response = JSONResponse(content={"redirect_url": "http://localhost:5173/kakao/callback"}, status_code=200)
 
         # 쿠키에 JWT 리프레시 토큰 및 전달값 설정
@@ -63,7 +63,7 @@ async def kakao_login(code: str, response: Response):
             key="refresh_token",
             value=jwt_refresh_token,
             httponly=True,  # JavaScript로 접근 불가
-            secure=True,  # HTTPS에서만 동작 (로컬 테스트 시 False)
+            secure=False,  # HTTPS에서만 동작 (로컬 테스트 시 False)
             max_age=3600,  # 쿠키 만료 시간 (초 단위) ** 5분~10분 설정 필요
             samesite="none",  # 동일 사이트 정책
         )
@@ -71,23 +71,7 @@ async def kakao_login(code: str, response: Response):
             key="access_token",
             value=jwt_access_token,
             httponly=True,  # JavaScript로 접근 불가
-            secure=True,  # HTTPS에서만 동작 (로컬 테스트 시 False)
-            max_age=3600,  # 쿠키 만료 시간 (초 단위) ** 5분~10분 설정 필요
-            samesite="none",  # 동일 사이트 정책
-        )
-        response.set_cookie(
-            key="user_id",
-            value=user.id,
-            httponly=True,  # JavaScript로 접근 불가
-            secure=True,  # HTTPS에서만 동작 (로컬 테스트 시 False)
-            max_age=3600,  # 쿠키 만료 시간 (초 단위) ** 5분~10분 설정 필요
-            samesite="none",  # 동일 사이트 정책
-        )
-        response.set_cookie(
-            key="profile_url",
-            value=user.image_url,
-            httponly=True,  # JavaScript로 접근 불가
-            secure=True,  # HTTPS에서만 동작 (로컬 테스트 시 False)
+            secure=False,  # HTTPS에서만 동작 (로컬 테스트 시 False)
             max_age=3600,  # 쿠키 만료 시간 (초 단위) ** 5분~10분 설정 필요
             samesite="none",  # 동일 사이트 정책
         )
@@ -132,7 +116,7 @@ async def kakao_login(code: str, response: Response):
                 key="refresh_token",
                 value=jwt_refresh_token,
                 httponly=True,  # JavaScript로 접근 불가
-                secure=True,  # HTTPS에서만 동작 (로컬 테스트 시 False)
+                secure=False,  # HTTPS에서만 동작 (로컬 테스트 시 False)
                 max_age=3600,  # 쿠키 만료 시간 (초 단위) ** 5분~10분 설정 필요
                 samesite="none",  # 동일 사이트 정책
             )
@@ -140,7 +124,7 @@ async def kakao_login(code: str, response: Response):
                 key="access_token",
                 value=jwt_access_token,
                 httponly=True,  # JavaScript로 접근 불가
-                secure=True,  # HTTPS에서만 동작 (로컬 테스트 시 False)
+                secure=False,  # HTTPS에서만 동작 (로컬 테스트 시 False)
                 max_age=3600,  # 쿠키 만료 시간 (초 단위) ** 5분~10분 설정 필요
                 samesite="none",  # 동일 사이트 정책
             )
@@ -148,7 +132,7 @@ async def kakao_login(code: str, response: Response):
                 key="user_id",
                 value=user.id,
                 httponly=True,  # JavaScript로 접근 불가
-                secure=True,  # HTTPS에서만 동작 (로컬 테스트 시 False)
+                secure=False,  # HTTPS에서만 동작 (로컬 테스트 시 False)
                 max_age=3600,  # 쿠키 만료 시간 (초 단위) ** 5분~10분 설정 필요
                 samesite="none",  # 동일 사이트 정책
             )
@@ -156,7 +140,7 @@ async def kakao_login(code: str, response: Response):
                 key="profile_url",
                 value=user.image_url,
                 httponly=True,  # JavaScript로 접근 불가
-                secure=True,  # HTTPS에서만 동작 (로컬 테스트 시 False)
+                secure=False,  # HTTPS에서만 동작 (로컬 테스트 시 False)
                 max_age=3600,  # 쿠키 만료 시간 (초 단위) ** 5분~10분 설정 필요
                 samesite="none",  # 동일 사이트 정책
             )
