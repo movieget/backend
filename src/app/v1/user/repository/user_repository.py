@@ -16,8 +16,7 @@ class UserRepository:
             return None
 
     async def create_user(
-            self, username: str, email: str, nickname: str, birthday: str,
-            phone_number: str, oauth_provider: str, image_url: str, kakao_id: int
+        self, username: str, email: str, nickname: str, birthday: str, phone_number: str, oauth_provider: str, image_url: str, kakao_id: int
     ) -> User:
         # 새 유저 생성
         return await User.create(
@@ -28,5 +27,5 @@ class UserRepository:
             phone_number=phone_number,
             oauth_provider=oauth_provider,
             image_url=image_url,
-            kakao_id=kakao_id
+            kakao_id=kakao_id,
         )

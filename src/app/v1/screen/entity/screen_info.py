@@ -8,10 +8,7 @@ class ScreenInfo(BaseModel, models.Model):
     start_time = fields.TimeField()
     end_time = fields.TimeField()
     screen = fields.ForeignKeyField("models.Screen", related_name="screen_infos", on_delete=fields.CASCADE)
-    movie = fields.ForeignKeyField(
-        "models.Movie", related_name="screen_infos",
-        on_delete=fields.CASCADE
-    )
+    movie = fields.ForeignKeyField("models.Movie", related_name="screen_infos", on_delete=fields.CASCADE)
 
     def __str__(self) -> str:
         return f"ScreenInfo {self.id}: {self.screen_id} "

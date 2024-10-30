@@ -10,17 +10,12 @@ class Book(BaseModel, models.Model):
     # price = fields.IntEnumField(MoviePriceEnum) # 수정 필요: IntEnumField로 변경
     adult_count = fields.IntField(default=0)
     child_count = fields.IntField(default=0)
-    user = fields.ForeignKeyField(
-        "models.User", related_name="books",
-        on_delete=fields.CASCADE, null=True
-    )
-    screen_info = fields.ForeignKeyField(
-        "models.ScreenInfo", related_name="books",
-        on_delete=fields.CASCADE, null=True  # null 허용
-    )
+    user = fields.ForeignKeyField("models.User", related_name="books", on_delete=fields.CASCADE, null=True)
+    screen_info = fields.ForeignKeyField("models.ScreenInfo", related_name="books", on_delete=fields.CASCADE, null=True)  # null 허용
 
     class Meta:
         table = "book"
+
     @property
     def movie_price(self) -> int:
         adult_price = 14000

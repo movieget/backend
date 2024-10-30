@@ -13,15 +13,18 @@ class MovieOption(BaseModel):
     age_rating: str
     poster_image_url: str
 
+
 class LocationOption(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
     spot: str
 
+
 class CinemaOption(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
     cinema_name: str
+
 
 class ScreeningOption(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -31,6 +34,7 @@ class ScreeningOption(BaseModel):
     end_time: time
     screen_id: int
 
+
 class BookOptionsResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     book_id: int | None
@@ -39,6 +43,7 @@ class BookOptionsResponse(BaseModel):
     cinemas: List[CinemaOption]
     screenings: List[ScreeningOption]
 
+
 class UpdateResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     booking_id: int  # 업데이트된 예약 ID
@@ -46,20 +51,21 @@ class UpdateResponse(BaseModel):
     message: str = "예약 상태가 성공적으로 업데이트되었습니다."  # 상태 업데이트에 대한 메시지 기본 값 설정
 
 
-
-
 # class SeatResponse(BaseModel):
 #     model_config = ConfigDict(from_attributes=True)
 #     is_selected: bool
+
 
 class SeatInfo(BaseModel):
     column: str
     status: bool
 
+
 class RowInfo(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     row: str
     seats: List[SeatInfo]
+
 
 class SeatLayoutResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -67,12 +73,10 @@ class SeatLayoutResponse(BaseModel):
     rows: List[RowInfo]
 
 
-
-
 class MovieScreeningInfoResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     movie_title: str
-    movie_poster: str #s3 url
+    movie_poster: str  # s3 url
     screening_date: date
     screening_time: str
     cinema: str
@@ -81,7 +85,6 @@ class MovieScreeningInfoResponse(BaseModel):
     child_count: int | None  # 사용자 입력을 위한 공란
     selected_seats: List[str]  # 사용자 입력을 위한 공란/좌석 정보를 리스트로 관리
     total_price: int | None = None
-
 
 
 class PriceResponse(BaseModel):
@@ -93,6 +96,7 @@ class PriceResponse(BaseModel):
 
 
 # 예매 응답
+
 
 class BookResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -112,6 +116,7 @@ class PaymentRedirectResponse(BaseModel):
     book_id: int
     redirect_url: str
 
+
 class CompletedBookingResponse(BaseModel):
     booking_id: int
     poster_url: str
@@ -128,6 +133,7 @@ class CompletedBookingResponse(BaseModel):
     spot: str
     cinema_name: str
     screen_number: int
+
 
 class CancelledBookingResponse(BaseModel):
     booking_id: int

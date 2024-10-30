@@ -39,7 +39,6 @@ TORTOISE_ORM = {
                 "database": os.environ["MYSQL_DB"],  # 필수 값
                 "charset": "utf8mb4",
                 "use_unicode": True,
-                # "timezone": "+09:00",
             },
         }
     },

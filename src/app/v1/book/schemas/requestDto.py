@@ -3,6 +3,7 @@ from typing import List, Literal
 from pydantic import BaseModel, ConfigDict
 from datetime import date
 
+
 class BookRequest(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     booking_id: int
@@ -21,10 +22,7 @@ class BookRequest(BaseModel):
     cinema_name: str
     screen_number: int
 
+
 class SeatSelectionRequest(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     selected_seat_ids: List[str]
-
-
-
-

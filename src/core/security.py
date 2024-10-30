@@ -35,8 +35,8 @@ def decode_jwt_token(token: str):
 
 
 async def get_current_user(
-        request: Request,   # 쿠키의 리프레시 토큰을 가져오기 위해
-        access_token: str = Depends(oauth2_scheme),     # 헤더의 엑세스토큰
+    request: Request,  # 쿠키의 리프레시 토큰을 가져오기 위해
+    access_token: str = Depends(oauth2_scheme),  # 헤더의 엑세스토큰
 ) -> User:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,

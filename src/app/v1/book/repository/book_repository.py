@@ -21,46 +21,35 @@ class BookRepository:
     async def get_all_booking_data(screening_date: date) -> List[Dict]:
         logging.info(f"Fetching all booking data for screening date: {screening_date}")
 
-        screen_infos = await ScreenInfo.filter(
-            screening_date=screening_date
-        ).prefetch_related(
-            'movie',
-            'screen__cinema__location'
-        ).all()
+        screen_infos = await ScreenInfo.filter(screening_date=screening_date).prefetch_related("movie", "screen__cinema__location").all()
 
         result = []
         for screen_info in screen_infos:
             # start_time과 end_time이 이미 datetime 객체인 경우 time() 메서드를 사용하여 시간 정보만 추출
-            start_time = screen_info.start_time.time() if isinstance(screen_info.start_time,
-                                                                     datetime) else screen_info.start_time
-            end_time = screen_info.end_time.time() if isinstance(screen_info.end_time,
-                                                                 datetime) else screen_info.end_time
+            start_time = screen_info.start_time.time() if isinstance(screen_info.start_time, datetime) else screen_info.start_time
+            end_time = screen_info.end_time.time() if isinstance(screen_info.end_time, datetime) else screen_info.end_time
 
-            result.append({
-                'movie': {
-                    'id': screen_info.movie.id,
-                    'title': screen_info.movie.title,
-                    'genre': screen_info.movie.genre,
-                    'duration': screen_info.movie.duration,
-                    'age_rating': screen_info.movie.age_rating,
-                    'poster_image_url': screen_info.movie.poster_image_url
-                },
-                'location': {
-                    'id': screen_info.screen.cinema.location.id,
-                    'spot': screen_info.screen.cinema.location.spot
-                },
-                'cinema': {
-                    'id': screen_info.screen.cinema.id,
-                    'cinema_name': screen_info.screen.cinema.cinema_name
-                },
-                'screening': {
-                    'id': screen_info.id,
-                    'screen_id': screen_info.screen.id,
-                    'screening_date': screen_info.screening_date,
-                    'start_time': start_time,
-                    'end_time': end_time
+            result.append(
+                {
+                    "movie": {
+                        "id": screen_info.movie.id,
+                        "title": screen_info.movie.title,
+                        "genre": screen_info.movie.genre,
+                        "duration": screen_info.movie.duration,
+                        "age_rating": screen_info.movie.age_rating,
+                        "poster_image_url": screen_info.movie.poster_image_url,
+                    },
+                    "location": {"id": screen_info.screen.cinema.location.id, "spot": screen_info.screen.cinema.location.spot},
+                    "cinema": {"id": screen_info.screen.cinema.id, "cinema_name": screen_info.screen.cinema.cinema_name},
+                    "screening": {
+                        "id": screen_info.id,
+                        "screen_id": screen_info.screen.id,
+                        "screening_date": screen_info.screening_date,
+                        "start_time": start_time,
+                        "end_time": end_time,
+                    },
                 }
-            })
+            )
 
         if not result:
             logging.warning(f"No booking data found for screening date: {screening_date}")
@@ -133,12 +122,11 @@ class BookRepository:
     @staticmethod
     async def get_bookings_by_user_and_status(user_id: int, status: str) -> List[Book]:
         logging.info(f"Fetching bookings for user_id: {user_id} with status: {status}")
-        bookings = await Book.filter(user_id=user_id, status=status).prefetch_related(
-            "screen_info__movie",
-            "screen_info__screen__cinema",
-            "screen_info__screen__cinema__location",
-            "book_seats__seat"
-        ).all()
+        bookings = (
+            await Book.filter(user_id=user_id, status=status)
+            .prefetch_related("screen_info__movie", "screen_info__screen__cinema", "screen_info__screen__cinema__location", "book_seats__seat")
+            .all()
+        )
         logging.info(f"Found {len(bookings)} bookings for user_id: {user_id} with status: {status}")
         return bookings
 
@@ -155,26 +143,25 @@ class BookRepository:
             raise HTTPException(status_code=404, detail="유효하지 않은 영화, 영화관 또는 상영 정보입니다.")
 
         # Book 인스턴스 생성
-        new_booking = await Book.create(
-            user_id=user_id,
-            screen_info_id=booking_data.screen_info_id,
-            status="pending"
-        )
+        new_booking = await Book.create(user_id=user_id, screen_info_id=booking_data.screen_info_id, status="pending")
         logging.info(f"New booking created with ID: {new_booking.id}")
         return new_booking
-
-
 
     @staticmethod
     async def get_completed_bookings_by_user(user_id: int) -> List[dict]:
         logging.info(f"Fetching completed bookings for user_id: {user_id}")
 
-        completed_bookings = await Book.filter(
-            user_id=user_id, status=StatusEnum.COMPLETED
-        ).prefetch_related(
-            "screen_info__movie", "screen_info__screen", "screen_info__screen__cinema",
-            "screen_info__screen__cinema__location", "book_seats__seat"
-        ).all()
+        completed_bookings = (
+            await Book.filter(user_id=user_id, status=StatusEnum.COMPLETED)
+            .prefetch_related(
+                "screen_info__movie",
+                "screen_info__screen",
+                "screen_info__screen__cinema",
+                "screen_info__screen__cinema__location",
+                "book_seats__seat",
+            )
+            .all()
+        )
 
         if not completed_bookings:
             logging.info(f"No completed bookings found for user_id: {user_id}")
@@ -197,7 +184,7 @@ class BookRepository:
                 total_price = 0
 
             age_rating = booking.screen_info.movie.age_rating.value
-            screen_number_str = ''.join(filter(str.isdigit, booking.screen_info.screen.screen_number))
+            screen_number_str = "".join(filter(str.isdigit, booking.screen_info.screen.screen_number))
             screen_number = int(screen_number_str) if screen_number_str else None
 
             booking_info = {
@@ -215,7 +202,7 @@ class BookRepository:
                 "screening_time": screening_time,
                 "spot": spot,
                 "cinema_name": booking.screen_info.screen.cinema.cinema_name,
-                "screen_number": screen_number
+                "screen_number": screen_number,
             }
             booking_data.append(booking_info)
             logging.debug(f"Added booking data for booking_id: {booking.id}")
@@ -227,12 +214,17 @@ class BookRepository:
     async def get_canceled_bookings_by_user(user_id: int) -> List[dict]:
         logging.info(f"Fetching canceled bookings for user_id: {user_id}")
 
-        canceled_bookings = await Book.filter(
-            user_id=user_id, status=StatusEnum.CANCELED
-        ).prefetch_related(
-            "screen_info__movie", "screen_info__screen", "screen_info__screen__cinema",
-            "screen_info__screen__cinema__location", "book_seats__seat"
-        ).all()
+        canceled_bookings = (
+            await Book.filter(user_id=user_id, status=StatusEnum.CANCELED)
+            .prefetch_related(
+                "screen_info__movie",
+                "screen_info__screen",
+                "screen_info__screen__cinema",
+                "screen_info__screen__cinema__location",
+                "book_seats__seat",
+            )
+            .all()
+        )
 
         if not canceled_bookings:
             logging.info(f"No canceled bookings found for user_id: {user_id}")
@@ -248,7 +240,7 @@ class BookRepository:
             spot = location.spot if location else "Unknown"
 
             age_rating = booking.screen_info.movie.age_rating.value
-            screen_number_str = ''.join(filter(str.isdigit, booking.screen_info.screen.screen_number))
+            screen_number_str = "".join(filter(str.isdigit, booking.screen_info.screen.screen_number))
             screen_number = int(screen_number_str) if screen_number_str else None
 
             booking_info = {
@@ -266,14 +258,13 @@ class BookRepository:
                 "screening_time": screening_time,
                 "spot": spot,
                 "cinema_name": booking.screen_info.screen.cinema.cinema_name,
-                "screen_number": screen_number
+                "screen_number": screen_number,
             }
             booking_data.append(booking_info)
             logging.debug(f"Added canceled booking data for booking_id: {booking.id}")
 
         logging.info(f"Completed fetching canceled booking data for user_id: {user_id}")
         return booking_data
-
 
     @staticmethod
     async def get_seat_layout(screen_id: int) -> List[Seat]:

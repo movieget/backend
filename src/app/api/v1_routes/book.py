@@ -5,10 +5,17 @@ from fastapi import APIRouter, HTTPException, Query, Depends
 from datetime import date, time, timedelta, datetime
 
 from src.app.v1.book.schemas.requestDto import BookRequest
-from src.app.v1.book.schemas.responseDto import (BookOptionsResponse, SeatLayoutResponse,
-                                                  MovieOption, LocationOption, CinemaOption,
-                                                 ScreeningOption,  PaymentRedirectResponse,
-                                                 CompletedBookingResponse, CancelledBookingResponse)
+from src.app.v1.book.schemas.responseDto import (
+    BookOptionsResponse,
+    SeatLayoutResponse,
+    MovieOption,
+    LocationOption,
+    CinemaOption,
+    ScreeningOption,
+    PaymentRedirectResponse,
+    CompletedBookingResponse,
+    CancelledBookingResponse,
+)
 
 from src.app.v1.book.repository.book_repository import BookRepository
 from src.app.v1.screen.entity.seat import Seat
@@ -17,6 +24,7 @@ from src.app.v1.book.schemas.responseDto import BookResponse
 from src.common.models.consts import StatusEnum
 
 from datetime import datetime, timedelta
+
 router = APIRouter()
 
 logging.basicConfig(level=logging.INFO)
@@ -32,10 +40,7 @@ async def get_current_user(user_id: int | None = Query(None)) -> int | None:
 
 
 @router.get("/options", response_model=BookOptionsResponse)
-async def booking_options(
-        screening_date: str = Query(..., description="상영 날짜 (YYYY-MM-DD)"),
-        user_id: int | None = Depends(get_current_user)
-):
+async def booking_options(screening_date: str = Query(..., description="상영 날짜 (YYYY-MM-DD)"), user_id: int | None = Depends(get_current_user)):
     logging.info(f"Request for booking options on {screening_date} with user_id: {user_id}")
 
     book_id = None
@@ -59,43 +64,41 @@ async def booking_options(
     screenings = []
 
     for item in all_data:
-        movie = item['movie']
-        if movie['id'] not in movies:
-            movies[movie['id']] = MovieOption(**movie)
+        movie = item["movie"]
+        if movie["id"] not in movies:
+            movies[movie["id"]] = MovieOption(**movie)
 
-        location = item['location']
-        if location['id'] not in locations:
-            locations[location['id']] = LocationOption(**location)
+        location = item["location"]
+        if location["id"] not in locations:
+            locations[location["id"]] = LocationOption(**location)
 
-        cinema = item['cinema']
-        if cinema['id'] not in cinemas:
-            cinemas[cinema['id']] = CinemaOption(**cinema)
+        cinema = item["cinema"]
+        if cinema["id"] not in cinemas:
+            cinemas[cinema["id"]] = CinemaOption(**cinema)
 
-        screening = item['screening']
+        screening = item["screening"]
 
         # Convert timedelta to time if necessary
-        start_time = screening['start_time']
-        end_time = screening['end_time']
+        start_time = screening["start_time"]
+        end_time = screening["end_time"]
         if isinstance(start_time, timedelta):
             start_time = (datetime.min + start_time).time()
         if isinstance(end_time, timedelta):
             end_time = (datetime.min + end_time).time()
 
-        screenings.append(ScreeningOption(
-            id=screening['id'],
-            screen_id=screening['screen_id'],
-            screening_date=screening['screening_date'],
-            start_time=start_time,
-            end_time=end_time
-        ))
+        screenings.append(
+            ScreeningOption(
+                id=screening["id"],
+                screen_id=screening["screen_id"],
+                screening_date=screening["screening_date"],
+                start_time=start_time,
+                end_time=end_time,
+            )
+        )
 
     logging.info("Returning all booking options")
     return BookOptionsResponse(
-        book_id=book_id,
-        movies=list(movies.values()),
-        locations=list(locations.values()),
-        cinemas=list(cinemas.values()),
-        screenings=screenings
+        book_id=book_id, movies=list(movies.values()), locations=list(locations.values()), cinemas=list(cinemas.values()), screenings=screenings
     )
 
 
@@ -113,20 +116,11 @@ async def get_seat_layout(screen_id: int):
         row_label = seat.row
         if row_label not in seat_layout:
             seat_layout[row_label] = []
-        seat_layout[row_label].append({
-            "column": str(seat.column),
-            "status": bool(seat.is_selected) if seat.is_selected is not None else None
-        })
+        seat_layout[row_label].append({"column": str(seat.column), "status": bool(seat.is_selected) if seat.is_selected is not None else None})
 
     formatted_response = {
         "screen_id": screen_id,
-        "rows": [
-            {
-                "row": row,
-                "seats": seat_layout[row]
-            }
-            for row in sorted(seat_layout.keys())  # row 기준으로 정렬
-        ]
+        "rows": [{"row": row, "seats": seat_layout[row]} for row in sorted(seat_layout.keys())],  # row 기준으로 정렬
     }
     return formatted_response
     # seat_layout = {}
@@ -140,6 +134,8 @@ async def get_seat_layout(screen_id: int):
     #     })
 
     # return seat_layout
+
+
 @router.post("/payment/tosspay", response_model=PaymentRedirectResponse)
 async def redirect_to_payment(booking: BookRequest):
     # 임시 리다이렉트 URL
@@ -147,10 +143,13 @@ async def redirect_to_payment(booking: BookRequest):
 
     return PaymentRedirectResponse(book_id=booking.booking_id, redirect_url=redirect_url)
 
+
 import logging
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
 @router.get("/completed/", response_model=List[CompletedBookingResponse])
 async def get_completed_bookings(user_id: int = Query(..., description="조회할 사용자의 ID")):
     logger.info(f"Fetching completed bookings for user_id: {user_id}")
@@ -163,6 +162,7 @@ async def get_completed_bookings(user_id: int = Query(..., description="조회�
     logger.info(f"Found {len(completed_bookings)} completed bookings for user_id: {user_id}")
     return completed_bookings
 
+
 @router.get("/canceled/", response_model=List[CancelledBookingResponse])
 async def get_canceled_bookings(user_id: int = Query(..., description="조회할 사용자의 ID")):
     logger.info(f"Fetching canceled bookings for user_id: {user_id}")
@@ -173,4 +173,3 @@ async def get_canceled_bookings(user_id: int = Query(..., description="조회할
         raise HTTPException(status_code=404, detail="취소된 예약을 찾을 수 없습니다.")
     logger.info(f"Found {len(canceled_bookings)} canceled bookings for user_id: {user_id}")
     return canceled_bookings
-

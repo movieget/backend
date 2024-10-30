@@ -20,6 +20,7 @@ async def logout_kakao_service(provider: str, access_token: str) -> bool | None:
 
     return False  # 로그아웃 실패
 
+
 # 추가되는 소셜의 로그아웃 기능 구현예정
 # async def logout_naver_service(provider: str, access_token:str) -> bool | None:
 #     pass
