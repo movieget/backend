@@ -33,7 +33,7 @@ class ScreeningOption(BaseModel):
 
 class BookOptionsResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    book_id: int
+    book_id: int | None
     movies: List[MovieOption]
     locations: List[LocationOption]
     cinemas: List[CinemaOption]
@@ -48,20 +48,23 @@ class UpdateResponse(BaseModel):
 
 
 
-class SeatResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-    is_selected: bool
+# class SeatResponse(BaseModel):
+#     model_config = ConfigDict(from_attributes=True)
+#     is_selected: bool
 
+class SeatInfo(BaseModel):
+    column: str
+    status: bool
 
-class Row(BaseModel):
+class RowInfo(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     row: str
-    seats: List[Optional[SeatResponse]]
+    seats: List[SeatInfo]
 
 class SeatLayoutResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     screen_id: int
-    rows: List[Row]
+    rows: List[RowInfo]
 
 
 

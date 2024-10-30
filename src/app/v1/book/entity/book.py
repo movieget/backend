@@ -16,7 +16,7 @@ class Book(BaseModel, models.Model):
     )
     screen_info = fields.ForeignKeyField(
         "models.ScreenInfo", related_name="books",
-        on_delete=fields.CASCADE, null=True
+        on_delete=fields.CASCADE, null=True  # null 허용
     )
 
     class Meta:
