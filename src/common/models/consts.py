@@ -58,7 +58,7 @@ class MovieStatusEnum(str, Enum):
 
 
 class MovieAgeRatingEnum(str, Enum):
-    ALL = "All"
+    ALL = "ALL"
     AGE_12 = "12"
     AGE_15 = "15"
     AGE_18 = "18"
