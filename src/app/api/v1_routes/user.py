@@ -17,10 +17,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 # 내 정보 조회
 @router.get("/me", response_model=UserResponseSchema)
-async def read_me(
-        request: Request,
-        access_token: str = Depends(oauth2_scheme)
-):
+async def read_me(request: Request, access_token: str = Depends(oauth2_scheme)):
     user = await get_current_user(request, access_token)
 
     if not user:
@@ -41,10 +38,7 @@ async def read_me(
 
 # 내 정보 수정
 @router.patch("/me", response_model=UserResponseSchema)
-async def update_user(
-        user_update: UserUpdateSchema,
-        current_user: User = Depends(get_current_user)
-):
+async def update_user(user_update: UserUpdateSchema, current_user: User = Depends(get_current_user)):
     user = await User.get(id=current_user.id)
 
     # 수정할 항목이 None이 아닐 경우에만 업데이트
@@ -78,8 +72,8 @@ async def update_user(
 # 로그아웃
 @router.get("/logout/me")
 async def logout_me(
-        access_token: str = Depends(oauth2_scheme),
-        current_user=Depends(get_current_user),
+    access_token: str = Depends(oauth2_scheme),
+    current_user=Depends(get_current_user),
 ) -> dict:
     # JWT 토큰을 Redis 블랙리스트 추가
     try:
@@ -120,5 +114,3 @@ async def logout_me(
     """다른 소셜 로그아웃 추가 가능"""
 
     return {"message": "로그아웃 완료"}
-
-

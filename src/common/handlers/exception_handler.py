@@ -1,6 +1,7 @@
 from enum import Enum
 from typing import Dict, Any
 
+
 class ErrorCode(Enum):
     INVALID_INPUT_VALUE = ("C001", "Invalid Input Value", 400)
     INTERNAL_SERVER_ERROR = ("C004", "Server Error", 500)
@@ -13,6 +14,8 @@ class ErrorCode(Enum):
         self.code = code
         self.message = message
         self.status_code = status_code
+    
+
 
 class BusinessException(Exception):
     def __init__(self, error_code: ErrorCode, detail: str = None):
@@ -20,8 +23,4 @@ class BusinessException(Exception):
         self.detail = detail
 
     def to_dict(self) -> Dict[str, Any]:
-        return {
-            "code": self.error_code.code,
-            "message": self.error_code.message,
-            "detail": self.detail
-        }
+        return {"code": self.error_code.code, "message": self.error_code.message, "detail": self.detail}

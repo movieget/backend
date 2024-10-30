@@ -57,7 +57,7 @@ async def verify_refresh_token(id: int, jti: str) -> bool:
         if not stored_token_data:
             return False
 
-    # Redis에 저장되어있는 해당 리프레시 토큰 가져와서 비교
+        # Redis에 저장되어있는 해당 리프레시 토큰 가져와서 비교
         token_data = json.loads(stored_token_data)
         return token_data.get("jti") == jti
     except RedisError as e:

@@ -7,6 +7,7 @@ DTO로 변환할 때 이 값을 그대로 사용하면 됩니다. Pydantic의 fr
 ORM 모델의 속성을 자동으로 DTO 필드에 매핑해줍니다
 """
 
+
 class FavoriteItemResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int

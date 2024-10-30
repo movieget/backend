@@ -26,7 +26,7 @@ async def get_movie_detail(movie_id: int, current_user: User = Depends(get_curre
         - movie_id: 조회할 영화의 ID
     - 반환: MovieDetail 객체 (영화 상세 정보)
     """
-    movie = await Movie.get_or_none(id=movie_id).prefetch_related('actor_images')
+    movie = await Movie.get_or_none(id=movie_id).prefetch_related("actor_images")
     if not movie:
         raise HTTPException(status_code=404, detail="Movie not found")
 
@@ -48,7 +48,7 @@ async def get_movie_detail(movie_id: int, current_user: User = Depends(get_curre
         actorImages=actor_images,
         isLikes=is_liked,
         totalLikes=total_likes,
-        rating=movie.rating
+        rating=movie.rating,
     )
 
 
@@ -83,7 +83,7 @@ async def search_movies(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     search: Optional[str] = None,
-    current_user: User = Depends(get_current_user)  # 현재 사용자 정보 추가
+    current_user: User = Depends(get_current_user),  # 현재 사용자 정보 추가
 ):
     """
     영화 검색 API
@@ -101,7 +101,7 @@ async def search_movies(
         query = query.filter(title__icontains=search)
 
     total = await query.count()
-    movies = await query.offset((page - 1) * limit).limit(limit).order_by('-created_at').prefetch_related('actor_images')  # actor_images 미리 로드
+    movies = await query.offset((page - 1) * limit).limit(limit).order_by("-created_at").prefetch_related("actor_images")  # actor_images 미리 로드
 
     movie_list = [
         MovieListItem(
@@ -118,25 +118,18 @@ async def search_movies(
             actorImages=[actor_image.image_url for actor_image in movie.actor_images],
             rating=movie.rating,
             isLikes=await Favorite.filter(user=current_user, movie=movie).exists(),
-            totalLikes=await Favorite.filter(movie=movie).count()
+            totalLikes=await Favorite.filter(movie=movie).count(),
         )
         for movie in movies
     ]
 
     next_page = page + 1 if (page * limit) < total else None
 
-    return MovieListResponse(
-        movies=movie_list,
-        total=total,
-        next_page=next_page
-    )
+    return MovieListResponse(movies=movie_list, total=total, next_page=next_page)
 
 
 @router.get("/movies/now", response_model=MovieListResponse)
-async def get_now_showing_movies(
-    page: int = Query(1, ge=1),
-    limit: int = Query(10, ge=1, le=100)
-):
+async def get_now_showing_movies(page: int = Query(1, ge=1), limit: int = Query(10, ge=1, le=100)):
     """
     상영 중 영화 조회 API
 
@@ -149,7 +142,7 @@ async def get_now_showing_movies(
     query = Movie.filter(status=MovieStatusEnum.NOW_SHOWING.value)
 
     total = await query.count()
-    movies = await query.offset((page - 1) * limit).limit(limit).order_by('-created_at').prefetch_related('actor_images')
+    movies = await query.offset((page - 1) * limit).limit(limit).order_by("-created_at").prefetch_related("actor_images")
 
     movie_list = [
         MovieListItem(
@@ -166,25 +159,18 @@ async def get_now_showing_movies(
             actorImages=[actor_image.image_url for actor_image in movie.actor_images],
             rating=movie.rating,
             isLikes=False,
-            totalLikes=0
+            totalLikes=0,
         )
         for movie in movies
     ]
 
     next_page = page + 1 if (page * limit) < total else None
 
-    return MovieListResponse(
-        movies=movie_list,
-        total=total,
-        next_page=next_page
-    )
+    return MovieListResponse(movies=movie_list, total=total, next_page=next_page)
 
 
 @router.get("/movies/soon", response_model=MovieListResponse)
-async def get_coming_soon_movies(
-    page: int = Query(1, ge=1),
-    limit: int = Query(10, ge=1, le=100)
-):
+async def get_coming_soon_movies(page: int = Query(1, ge=1), limit: int = Query(10, ge=1, le=100)):
     """
     개봉 예정 영화 조회 API
 
@@ -197,7 +183,7 @@ async def get_coming_soon_movies(
     query = Movie.filter(status=MovieStatusEnum.COMING_SOON)
 
     total = await query.count()
-    movies = await query.offset((page - 1) * limit).limit(limit).order_by('-created_at').prefetch_related('actor_images')
+    movies = await query.offset((page - 1) * limit).limit(limit).order_by("-created_at").prefetch_related("actor_images")
 
     movie_list = [
         MovieListItem(
@@ -214,17 +200,11 @@ async def get_coming_soon_movies(
             actorImages=[actor_image.image_url for actor_image in movie.actor_images],
             rating=movie.rating,
             isLikes=False,
-            totalLikes=0
+            totalLikes=0,
         )
         for movie in movies
     ]
 
     next_page = page + 1 if (page * limit) < total else None
 
-    return MovieListResponse(
-        movies=movie_list,
-        total=total,
-        next_page=next_page
-    )
-
-
+    return MovieListResponse(movies=movie_list, total=total, next_page=next_page)
