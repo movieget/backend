@@ -51,7 +51,7 @@ async def kakao_login(code: str, response: Response):
         # JWT 토큰 발행 (액세스토큰)    15분
         jwt_access_token = create_jwt_token({"id": user.id, "type": "access"}, expires_delta=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
 
-        # 리프레쉬 토큰 생성 필요함 (액세스토큰 발급을 위한 리프레쉬토큰)  1시간
+        # 리프레쉬 토큰 생성 필요함 (액세스토큰 발급을 위한 리프레쉬토큰) 1시간
         jwt_refresh_token = create_jwt_token({"id": user.id, "type": "refresh"}, expires_delta=settings.REFRESH_TOKEN_EXPIRE_DAYS)
         jti = decode_jwt_token(jwt_refresh_token).get("jti")
 
