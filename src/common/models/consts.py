@@ -25,9 +25,9 @@ class RatingEnum(str, Enum):
 
 
 class StatusEnum(str, Enum):
-    PENDING = "진행 중"  # 또는 대기 중
-    COMPLETED = "완료"
-    CANCELLED = "취소"
+    PENDING = "pending"  # 또는 대기 중
+    COMPLETED = "completed"
+    CANCELED = "canceled"
 
 
 class MoviePriceEnum(int, Enum):  # IntEnum으로 사용해야 함

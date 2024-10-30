@@ -1,7 +1,8 @@
 from datetime import date, datetime, time
 
 from pydantic import BaseModel, ConfigDict
-from typing import List, Optional
+from typing import List, Optional, Literal
+
 
 class MovieOption(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -28,6 +29,7 @@ class ScreeningOption(BaseModel):
     screening_date: date
     start_time: time
     end_time: time
+    screen_id: int
 
 class BookOptionsResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -37,13 +39,19 @@ class BookOptionsResponse(BaseModel):
     cinemas: List[CinemaOption]
     screenings: List[ScreeningOption]
 
+class UpdateResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    booking_id: int  # 업데이트된 예약 ID
+    status: str  # 업데이트된 상태 (예: "COMPLETED", "CANCELED")
+    message: str = "예약 상태가 성공적으로 업데이트되었습니다."  # 상태 업데이트에 대한 메시지 기본 값 설정
+
+
+
 
 class SeatResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    seat_number: int
     is_selected: bool
-    row: str
-    column: int
+
 
 class Row(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -71,30 +79,6 @@ class MovieScreeningInfoResponse(BaseModel):
     selected_seats: List[str]  # 사용자 입력을 위한 공란/좌석 정보를 리스트로 관리
     total_price: int | None = None
 
-class PaymentResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-    booking_id: int
-    redirect_url: str
-
-# 예매 요청 DTO
-class BookRequest(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-    user_id: int
-    screening_date: date  # 상영 날짜 (YYYY-MM-DD 형식)
-    movie_id: int  # 영화 ID
-    location_id: int # 지역 ID
-    cinema_id: int  # 영화관 ID
-    screen_info_id: int  # 상영 정보 (시간 포함) ID
-    adult_count: int  # 성인 수
-    child_count: int  # 청소년 수
-    selected_seat_ids: List[int]  # 선택된 좌석 ID 리스트
-
-
-
-# 선택된 좌석 ID들의 리스트를 나타내는 스키마
-class SeatSelectionRequest(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-    selected_seat_ids: List[str]  # 좌석 ID 목록, 예: ["a1", "a2"]
 
 
 class PriceResponse(BaseModel):
@@ -121,13 +105,40 @@ class BookResponse(BaseModel):
     cinema: str  # 상영관 정보
 
 
-class PaymentUpdateResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+class PaymentRedirectResponse(BaseModel):
+    book_id: int
+    redirect_url: str
+
+class CompletedBookingResponse(BaseModel):
     booking_id: int
-    status: str
+    poster_url: str
+    title: str
+    duration: int
+    booking_date: str
+    screening_date: str
+    age_rating: Literal["all", "12", "15", "18"]
+    seats: List[str]
+    total_price: int
+    adult_count: int
+    child_count: int
+    screening_time: str
+    spot: str
+    cinema_name: str
+    screen_number: int
 
-
-
-
-
-
+class CancelledBookingResponse(BaseModel):
+    booking_id: int
+    poster_url: str
+    title: str
+    duration: int
+    booking_date: str
+    screening_date: str
+    age_rating: Literal["all", "12", "15", "18"]
+    seats: List[str]
+    total_price: int
+    adult_count: int
+    child_count: int
+    screening_time: str
+    spot: str
+    cinema_name: str
+    screen_number: int
