@@ -55,7 +55,7 @@ async def kakao_login(code: str, response: Response):
         jwt_refresh_token = create_jwt_token({"id": user.id, "type": "refresh"}, expires_delta=settings.REFRESH_TOKEN_EXPIRE_DAYS)
         jti = decode_jwt_token(jwt_refresh_token).get("jti")
 
-        response = RedirectResponse(url="http://localhost:5173/kakao/callback", status_code=307)
+        response = RedirectResponse(url=f"http://localhost:5173/kakao/callback?user_id={user.id}", status_code=307)
         # response = JSONResponse(content={"redirect_url": "http://localhost:5173/kakao/callback"}, status_code=200)
 
         # 쿠키에 JWT 리프레시 토큰 및 전달값 설정
