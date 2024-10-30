@@ -8,6 +8,7 @@ from src.app.api.v1_routes import (
     payment_router,
     payment_result_router,
     favorite,
+    movie_routor,
 )
 
 
@@ -21,3 +22,5 @@ api_router.include_router(confirm_router.router, prefix="/mypage", tags=["Mypage
 api_router.include_router(cancel_router.router, prefix="/mypage", tags=["Mypage Booking"])
 api_router.include_router(payment_router.router, prefix="/payment", tags=["Payment"])
 api_router.include_router(favorite.router, prefix="/favorites", tags=["Favorites"])
+api_router.include_router(movie_routor.router, prefix="/movies", tags=["Movies"])
+

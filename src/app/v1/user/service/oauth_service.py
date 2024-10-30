@@ -1,6 +1,6 @@
 import os
 
-import aiohttp
+# import aiohttp
 import httpx
 
 KAKAO_TOKEN_URL = "https://kauth.kakao.com/oauth/token"

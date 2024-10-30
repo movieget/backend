@@ -9,6 +9,7 @@ class Cinema(BaseModel, models.Model):
         "models.Location",
         related_name="cinemas",
         on_delete=fields.CASCADE,
+        unique=False  # 명시적으로 unique=False 설정
     )
 
     def __str__(self):

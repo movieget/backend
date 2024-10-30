@@ -36,22 +36,30 @@ class MoviePriceEnum(int, Enum):  # IntEnum으로 사용해야 함
 
 
 class MovieGenreEnum(str, Enum):
-    ACTION = "ACTION"
-    DRAMA = "DRAMA"
-    COMEDY = "COMEDY"
-    HORROR = "HORROR"
-    SCIFI = "SCIFI"
-    ROMANCE = "ROMANCE"
+    ACTION = "액션"
+    DRAMA = "드라마"
+    COMEDY = "코미디"
+    HORROR = "공포"
+    SCIFI = "SF"
+    ROMANCE = "로맨스"
+    ADVENTURE = "모험"
+    ANIMATION = "애니메이션"
+    FANTASY = "판타지"
+    CRIME = "범죄"
+    DOCUMENTARY = "다큐멘터리"
+    MYSTERY = "미스터리"
+    WAR = "전쟁"
+    THRILLER = "스릴러"
 
 
 class MovieStatusEnum(str, Enum):
     NOW_SHOWING = "상영 중"
-    COMING_SOON = "상영 예정"
+    COMING_SOON = "개봉 예정"
     ENDED = "상영 종료"
 
 
 class MovieAgeRatingEnum(str, Enum):
-    ALL = "all"
-    AGE_12 = "12"
-    AGE_15 = "15"
-    AGE_18 = "18"
+    ALL = "ALL"
+    TWELVE = "12"
+    FIFTEEN = "15"
+    EIGHTEEN = "18"
