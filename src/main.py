@@ -17,7 +17,7 @@ app = FastAPI(lifespan=lifespan, debug=True)
 # NOTE: Turn off in Production
 # app = FastAPI(openapi_url=None)
 
-origins = ["*"]
+origins = ["*", "localhost:5173"]
 
 app.add_middleware(
     CORSMiddleware,
