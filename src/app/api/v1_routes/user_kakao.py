@@ -1,9 +1,11 @@
 from fastapi import APIRouter, HTTPException
 from redis import RedisError
 from starlette import status
-from starlette.responses import Response
-from tortoise.exceptions import DBConnectionError, DoesNotExist
+from fastapi.responses import JSONResponse, Response
+from starlette.responses import RedirectResponse
+from tortoise.exceptions import DBConnectionError
 
+from src.app.v1.user.schemas.oauth import KakaoOauthResponse
 from src.app.v1.user.service.oauth_service import get_kakao_token, get_kakao_user_info
 from src.app.v1.user.service.redis import save_kakao_access_token, save_kakao_refresh_token, save_refresh_token
 from src.core.configs.database_config import settings
@@ -15,12 +17,10 @@ user_repository = UserRepository()
 
 
 # 카카오 로그인
-@router.get("/login/kakao")
-async def kakao_login(code: str, response: Response):
+@router.get("/login/kakao", response_model=KakaoOauthResponse)
+async def kakao_login(code: str, response: Response) -> KakaoOauthResponse:
     # 카카오 액세스 토큰과 리프레시 토큰 요청
-    token = await get_kakao_token(code)
-    access_token = token.get("access_token")
-    refresh_token = token.get("refresh_token")
+    access_token = await get_kakao_token(code)
     if not access_token:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="카카오 로그인 실패")
 
@@ -48,41 +48,32 @@ async def kakao_login(code: str, response: Response):
     if user:
         # 사용자가 DB에 있다면
         # JWT 토큰 발행 (액세스토큰)    15분
-        jwt_access_token = create_jwt_token(
-            {"id": user.id, "type": "access"},
-            expires_delta=settings.ACCESS_TOKEN_EXPIRE_MINUTES
-        )
+        jwt_access_token = create_jwt_token({"id": user.id, "type": "access"}, expires_delta=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
 
         # 리프레쉬 토큰 생성 필요함 (액세스토큰 발급을 위한 리프레쉬토큰) 1시간
-        jwt_refresh_token = create_jwt_token(
-            {"id": user.id, "type": "refresh"},
-            expires_delta=settings.REFRESH_TOKEN_EXPIRE_DAYS
-        )
+        jwt_refresh_token = create_jwt_token({"id": user.id, "type": "refresh"}, expires_delta=settings.REFRESH_TOKEN_EXPIRE_DAYS)
         jti = decode_jwt_token(jwt_refresh_token).get("jti")
 
-        # 쿠키에 JWT 리프레시 토큰 설정
+        # 쿠키에 JWT 리프레시 토큰 및 전달값 설정
         response.set_cookie(
             key="refresh_token",
             value=jwt_refresh_token,
             httponly=True,  # JavaScript로 접근 불가
-            secure=False,    # HTTPS에서만 동작 (로컬 테스트 시 False)
-            max_age=3600,   # 쿠키 만료 시간 (초 단위) ** 5분~10분 설정 필요
-            samesite="lax"  # 동일 사이트 정책
+            secure=False,  # HTTPS에서만 동작 (로컬 테스트 시 False)
+            max_age=3600,  # 쿠키 만료 시간 (초 단위) ** 5분~10분 설정 필요
+            samesite="none",  # 동일 사이트 정책
         )
 
         # 레디스에 "자체 리프레시 토큰"과 "카카오액세스토큰(로그아웃시 필요함)" 저장
         try:
             await save_refresh_token(id=user.id, jti=jti)
             await save_kakao_access_token(id=user.id, access_token=access_token)
-            await save_kakao_refresh_token(id=user.id, refresh_token=refresh_token)
         except RedisError:
             raise HTTPException(status_code=500, detail="Redis 저장 실패")
 
-        # Response Body 값으로 액세스 토큰 반환
-        return {
-            "access_token": jwt_access_token,
-            "token_type": "bearer"
-        }
+        response_model = KakaoOauthResponse(access_token=access_token, id=user.id, profile_image_url=user.image_url)
+
+        return response_model
 
     else:
         try:
@@ -95,35 +86,36 @@ async def kakao_login(code: str, response: Response):
                 phone_number=phone_number,
                 oauth_provider=oauth_provider,
                 image_url=image_url,
-                kakao_id=kakao_id
+                kakao_id=kakao_id,
             )
 
             # JWT 토큰 발행 (액세스토큰)    15분
-            jwt_access_token = create_jwt_token(
-                {"id": user.id, "type": "access"},
-                expires_delta=settings.ACCESS_TOKEN_EXPIRE_MINUTES
-            )
+            jwt_access_token = create_jwt_token({"id": user.id, "type": "access"}, expires_delta=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
 
             # 리프레쉬 토큰 생성 필요함 (액세스토큰 발급을 위한 리프레쉬토큰) 1시간
-            jwt_refresh_token = create_jwt_token(
-                {"id": user.id, "type": "refresh"},
-                expires_delta=settings.REFRESH_TOKEN_EXPIRE_DAYS
-            )
+            jwt_refresh_token = create_jwt_token({"id": user.id, "type": "refresh"}, expires_delta=settings.REFRESH_TOKEN_EXPIRE_DAYS)
             jti = decode_jwt_token(jwt_refresh_token).get("jti")
+
+            # 쿠키에 JWT 리프레시 토큰 및 전달값 설정
+            response.set_cookie(
+                key="refresh_token",
+                value=jwt_refresh_token,
+                httponly=True,  # JavaScript로 접근 불가
+                secure=False,  # HTTPS에서만 동작 (로컬 테스트 시 False)
+                max_age=3600,  # 쿠키 만료 시간 (초 단위) ** 5분~10분 설정 필요
+                samesite="none",  # 동일 사이트 정책
+            )
 
             # 레디스에 "자체 리프레시 토큰"과 "카카오액세스토큰(로그아웃시 필요함), 카카오리프레시토큰" 저장
             try:
                 await save_refresh_token(id=user.id, jti=jti)
                 await save_kakao_access_token(id=user.id, access_token=access_token)
-                await save_kakao_refresh_token(id=user.id, refresh_token=refresh_token)
             except RedisError:
                 raise HTTPException(status_code=500, detail="Redis 저장 실패")
 
-            # 액세스 토큰을 Response body로 반환
-            return {
-                "access_token": jwt_access_token,
-                "token_type": "bearer"
-            }
+            response_model = KakaoOauthResponse(access_token=access_token, id=user.id, profile_image_url=user.image_url)
+
+            return response_model
 
         except DBConnectionError:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="데이터베이스 연결 오류입니다.")

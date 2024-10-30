@@ -12,11 +12,12 @@ from src.common.handlers.db_handler import lifespan
 
 tracemalloc.start()
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(lifespan=lifespan, debug=True)
 
-origins = [
-    "http://localhost:5173",
-]
+# NOTE: Turn off in Production
+# app = FastAPI(openapi_url=None)
+
+origins = ["http://localhost:5173", "https://localhost:5173"]
 
 app.add_middleware(
     CORSMiddleware,
