@@ -29,7 +29,14 @@ class MovieListItem(BaseModel):
     age: str
     genre: str
     playing: bool
-
+    overview: Optional[str] = None
+    trailerUrl: Optional[str] = None
+    duration: Optional[int] = None
+    backdropImage: Optional[str] = None
+    actorImages: Optional[List[str]] = None
+    rating: Optional[int] = None
+    isLikes: Optional[bool] = None
+    totalLikes: Optional[int] = None
 
 class MovieListResponse(BaseModel):
     movies: List[MovieListItem]
