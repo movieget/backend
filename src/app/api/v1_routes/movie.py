@@ -81,8 +81,9 @@ async def toggle_favorite(movie_id: int, current_user: User = Depends(get_curren
 @router.get("/", response_model=MovieListResponse)
 async def search_movies(
     page: int = Query(1, ge=1),
-    limit: int = Query(10, ge=1, le=101),
-    search: Optional[str] = None
+    limit: int = Query(10, ge=1, le=100),
+    search: Optional[str] = None,
+    current_user: User = Depends(get_current_user)  # 현재 사용자 정보 추가
 ):
     """
     영화 검색 API
@@ -90,7 +91,7 @@ async def search_movies(
     - 기능: 제목으로 영화 목록을 페이지네이션하여 조회합니다.
     - 파라미터:
         - page: 페이지 번호 (기본값: 1)
-        - limit: 한 페이지당 영화 수 (기본값: 10, 최대: 101)
+        - limit: 한 페이지당 영화 수 (기본값: 10, 최대: 100)
         - search: 검색어 (선택적)
     - 반환: MovieListResponse 객체
     """
@@ -100,7 +101,7 @@ async def search_movies(
         query = query.filter(title__icontains=search)
 
     total = await query.count()
-    movies = await query.offset((page - 1) * limit).limit(limit).order_by('-created_at')
+    movies = await query.offset((page - 1) * limit).limit(limit).order_by('-created_at').prefetch_related('actor_images')  # actor_images 미리 로드
 
     movie_list = [
         MovieListItem(
@@ -109,7 +110,15 @@ async def search_movies(
             posterImage=movie.poster_image_url,
             age=movie.age_rating,
             genre=movie.genre,
-            playing=(movie.status == MovieStatusEnum.NOW_SHOWING.value)
+            playing=(movie.status == MovieStatusEnum.NOW_SHOWING.value),
+            overview=movie.overview,
+            trailerUrl=movie.trailer_url,
+            duration=movie.duration,
+            backdropImage=movie.image_url,
+            actorImages=[actor_image.image_url for actor_image in movie.actor_images],
+            rating=movie.rating,
+            isLikes=await Favorite.filter(user=current_user, movie=movie).exists(),
+            totalLikes=await Favorite.filter(movie=movie).count()
         )
         for movie in movies
     ]
@@ -137,11 +146,10 @@ async def get_now_showing_movies(
         - limit: 한 페이지당 영화 수 (기본값: 10, 최대: 100)
     - 반환: MovieListResponse 객체
     """
-    # "상영 중" 상태인 영화만 필터링
     query = Movie.filter(status=MovieStatusEnum.NOW_SHOWING.value)
 
     total = await query.count()
-    movies = await query.offset((page - 1) * limit).limit(limit).order_by('-created_at')
+    movies = await query.offset((page - 1) * limit).limit(limit).order_by('-created_at').prefetch_related('actor_images')
 
     movie_list = [
         MovieListItem(
@@ -150,7 +158,15 @@ async def get_now_showing_movies(
             posterImage=movie.poster_image_url,
             age=movie.age_rating,
             genre=movie.genre,
-            playing=True
+            playing=True,
+            overview=movie.overview,
+            trailerUrl=movie.trailer_url,
+            duration=movie.duration,
+            backdropImage=movie.image_url,
+            actorImages=[actor_image.image_url for actor_image in movie.actor_images],
+            rating=movie.rating,
+            isLikes=False,
+            totalLikes=0
         )
         for movie in movies
     ]
@@ -178,11 +194,10 @@ async def get_coming_soon_movies(
         - limit: 한 페이지당 영화 수 (기본값: 10, 최대: 100)
     - 반환: MovieListResponse 객체
     """
-    # MovieStatusEnum을 사용하여 "개봉 예정" 상태와 매칭
     query = Movie.filter(status=MovieStatusEnum.COMING_SOON)
 
     total = await query.count()
-    movies = await query.offset((page - 1) * limit).limit(limit).order_by('-created_at')
+    movies = await query.offset((page - 1) * limit).limit(limit).order_by('-created_at').prefetch_related('actor_images')
 
     movie_list = [
         MovieListItem(
@@ -191,7 +206,15 @@ async def get_coming_soon_movies(
             posterImage=movie.poster_image_url,
             age=movie.age_rating,
             genre=movie.genre,
-            playing=False
+            playing=False,  # 개봉 예정이므로 False
+            overview=movie.overview,
+            trailerUrl=movie.trailer_url,
+            duration=movie.duration,
+            backdropImage=movie.image_url,
+            actorImages=[actor_image.image_url for actor_image in movie.actor_images],
+            rating=movie.rating,
+            isLikes=False,
+            totalLikes=0
         )
         for movie in movies
     ]

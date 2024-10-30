@@ -20,7 +20,6 @@ class MovieDetail(BaseModel):
     rating: int
 
 
-
 #### 영화 검색 & 무한 스크롤 스키마 ####
 class MovieListItem(BaseModel):
     id: int
@@ -29,6 +28,14 @@ class MovieListItem(BaseModel):
     age: str
     genre: str
     playing: bool
+    overview: Optional[str] = None
+    trailerUrl: Optional[str] = None
+    duration: Optional[int] = None
+    backdropImage: Optional[str] = None
+    actorImages: Optional[List[str]] = None
+    rating: Optional[int] = None
+    isLikes: Optional[bool] = None
+    totalLikes: Optional[int] = None
 
 
 class MovieListResponse(BaseModel):
