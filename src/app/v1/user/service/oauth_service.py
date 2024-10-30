@@ -18,12 +18,15 @@ async def get_kakao_token(code: str) -> str | None:
 
     async with httpx.AsyncClient() as client:
         response = await client.post(url, params=params)
+
         response_data = response.json()
 
         if response.status_code != 200:
-            return None
+            raise HTTPException(detail=response_data.get("error_description"), status_code=500)
 
-        return response_data
+        access_token = response_data.get("access_token")
+
+        return access_token
 
 
 async def get_kakao_user_info(access_token: str):
