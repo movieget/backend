@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List
 from src.app.v1.review.entity.review import Review
 from src.common.handlers.exception_handler import BusinessException, ErrorCode
 from src.app.v1.review.repository.review_repository import ReviewRepository
@@ -12,7 +12,7 @@ class ReviewService:
         self.review_repository = review_repository
         self.user_repository = user_repository
 
-    async def get_user_reviews_with_user_info(self, user_id: int) -> List[Dict]:
+    async def get_user_reviews_with_user_info(self, user_id: int) -> List[Review]:
         """특정 사용자의 모든 리뷰를 가져옵니다."""
         # 사용자 조회
         user = await self.user_repository.get_user(user_id)
@@ -26,8 +26,6 @@ class ReviewService:
         if not reviews:
             raise BusinessException(ErrorCode.REVIEW_NOT_FOUND, f"사용자 {user_id}번 ID에 대한 리뷰가 없습니다.")
 
-        # 리뷰 정보를 포함한 리스트 반환
-        reviews = await self.review_repository.get_reviews_by_user_id(user_id)
         return [
             {
                 "id": review.id,

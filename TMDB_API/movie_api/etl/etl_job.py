@@ -7,21 +7,22 @@ from dotenv import load_dotenv
 # .env 파일 로드
 load_dotenv()
 
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 # 환경 변수에서 데이터베이스 연결 정보 가져오기
-TMDB_HOST = os.getenv('TMDB_HOST')
-TMDB_PORT = int(os.getenv('TMDB_PORT'))
-TMDB_USER = os.getenv('TMDB_USER')
-TMDB_PASSWORD = os.getenv('TMDB_PASSWORD')
-TMDB_DB = os.getenv('TMDB_DB')
+TMDB_HOST = os.getenv("TMDB_HOST")
+TMDB_PORT = int(os.getenv("TMDB_PORT"))
+TMDB_USER = os.getenv("TMDB_USER")
+TMDB_PASSWORD = os.getenv("TMDB_PASSWORD")
+TMDB_DB = os.getenv("TMDB_DB")
 
-MOVIE_HOST = os.getenv('MOVIE_HOST')
-MOVIE_PORT = int(os.getenv('MOVIE_PORT'))
-MOVIE_USER = os.getenv('MOVIE_USER')
-MOVIE_PASSWORD = os.getenv('MOVIE_PASSWORD')
-MOVIE_DB = os.getenv('MOVIE_DB')
+MOVIE_HOST = os.getenv("MOVIE_HOST")
+MOVIE_PORT = int(os.getenv("MOVIE_PORT"))
+MOVIE_USER = os.getenv("MOVIE_USER")
+MOVIE_PASSWORD = os.getenv("MOVIE_PASSWORD")
+MOVIE_DB = os.getenv("MOVIE_DB")
+
 
 async def connect_to_database(host, port, user, password, db):
     """
@@ -36,6 +37,7 @@ async def connect_to_database(host, port, user, password, db):
         logger.error(f"Failed to connect to database {db}: {e}")
         raise
 
+
 async def fetch_data(cursor, table):
     """
     데이터 조회 함수
@@ -49,6 +51,7 @@ async def fetch_data(cursor, table):
     except Exception as e:
         logger.error(f"Error fetching data from {table}: {e}")
         raise
+
 
 async def insert_movies(cursor, data):
     """
@@ -82,9 +85,9 @@ async def insert_movies(cursor, data):
                 movie[9][:100],  # 이미지 URL (100자로 제한)
                 movie[10][:100],  # 포스터 이미지 URL (100자로 제한)
                 movie[11],  # 줄거리
-                (movie[12] or '')[:100],  # 예고편 URL (100자로 제한, 없으면 빈 문자열)
+                (movie[12] or "")[:100],  # 예고편 URL (100자로 제한, 없으면 빈 문자열)
                 movie[13][:3],  # 연령 등급 (3자로 제한)
-                ''  # 배우 이미지 URL (기본값으로 빈 문자열 사용)
+                "",  # 배우 이미지 URL (기본값으로 빈 문자열 사용)
             )
             processed_data.append(processed_movie)
 
@@ -93,6 +96,7 @@ async def insert_movies(cursor, data):
     except Exception as e:
         logger.error(f"Error inserting movies: {e}")
         raise
+
 
 async def insert_actor_images(cursor, data):
     """
@@ -112,6 +116,7 @@ async def insert_actor_images(cursor, data):
     except Exception as e:
         logger.error(f"Error inserting actor images: {e}")
         raise
+
 
 async def migrate_data():
     """
@@ -142,7 +147,7 @@ async def migrate_data():
 
     except Exception as e:
         logger.error(f"An error occurred during migration: {e}")
-        if 'movie_conn' in locals():
+        if "movie_conn" in locals():
             await movie_conn.rollback()
             logger.info("Changes rolled back due to error")
     finally:
@@ -152,6 +157,7 @@ async def migrate_data():
         if movie_pool:
             movie_pool.close()
             await movie_pool.wait_closed()
+
 
 async def run_etl():
     """
@@ -165,6 +171,7 @@ async def run_etl():
     except Exception as e:
         logger.error(f"ETL process failed: {str(e)}")
         raise
+
 
 if __name__ == "__main__":
     """

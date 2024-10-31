@@ -1,5 +1,4 @@
 from src.app.v1.review.entity.review import Review
-from tortoise.queryset import QuerySet
 from typing import List
 
 
