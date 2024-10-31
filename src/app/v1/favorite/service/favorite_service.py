@@ -32,7 +32,7 @@ class FavoriteService:
                     "movie_id": movie_id
                 }
         except Exception as e:
-            raise BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, detail=f"An unexpected error occurred: {str(e)}")
+            raise BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, detail=f"찜 조회를 실패했습니다.")
 
     async def get_user_favorites(self, user_id: int) -> List[Favorite]:
         """사용자의 모든 찜 목록을 가져옵니다."""
