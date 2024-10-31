@@ -10,14 +10,21 @@ from dotenv import load_dotenv
 
 logger = logging.getLogger(__name__)
 
-load_dotenv()
-
 
 class PaymentService:
 
     def __init__(self, payment_repository: PaymentRepository):
-        encoded_secret_key = self._get_encoded_secret_key()
+        load_dotenv()
+        self.secret_key = self._get_secret_key()
+        self.encoded_secret_key = self._get_encoded_secret_key()
+        self.api_url = os.getenv("TOSS_API_URL")
         self.payment_repository = payment_repository
+
+    def _get_secret_key(self):
+        secret_key = os.getenv("TOSS_SECRET_KEY")
+        if not secret_key:
+            raise ValueError("TOSS_SECRET_KEY 환경 변수가 없습니다.")
+        return secret_key
 
     def _get_encoded_secret_key(self):
         secret_key = os.getenv("TOSS_SECRET_KEY")
@@ -30,13 +37,20 @@ class PaymentService:
         """
         토스 페이먼츠 결제 승인 API 호출
         """
-        headers = {"Authorization": f"Basic {os.getenv("TOSS_SECRET_KEY")}", "Content-Type": "application/json"}
+        headers = {
+            "Authorization": f"Basic {self.encoded_secret_key}",
+            "Content-Type": "application/json",
+        }
 
-        payload = {"paymentKey": paymentrequest.paymentKey, "orderId": paymentrequest.orderId, "amount": paymentrequest.amount}
+        payload = {
+            "paymentKey": paymentrequest.paymentKey,
+            "orderId": paymentrequest.orderId,
+            "amount": paymentrequest.amount,
+        }
 
         async with httpx.AsyncClient() as client:
             try:
-                response = await client.post(f"{os.getenv("TOSS_API_URL")}/payments/confirm", headers=headers, json=payload)
+                response = await client.post(f"{self.api_url}/payments/confirm", headers=headers, json=payload)
 
                 if response.status_code == 200:
                     toss_response = response.json()
@@ -46,19 +60,7 @@ class PaymentService:
                         paymentKey=toss_response["paymentKey"],
                         orderId=toss_response["orderId"],
                         amount=toss_response["amount"],
-                        book_id=paymentrequest.book_id,
-                        poster=paymentrequest.poster,
-                        age=paymentrequest.age,
-                        duration=paymentrequest.duration,
-                        title=paymentrequest.title,
-                        date=paymentrequest.date,
-                        start_time=paymentrequest.start_time,
-                        location=paymentrequest.location,
-                        cinema=paymentrequest.cinema,
-                        screen_id=paymentrequest.screen_id,
-                        screening_date=paymentrequest.screening_date,
-                        adult_count=paymentrequest.adult_count,
-                        child_count=paymentrequest.child_count,
+                        **paymentrequest.model_dump(exclude={"paymentKey", "orderId", "amount"}),
                     )
 
                     await self.payment_repository.create_payment_data(paymentrequest)
