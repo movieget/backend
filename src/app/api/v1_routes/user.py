@@ -1,11 +1,13 @@
 from datetime import datetime
+from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, HTTPException, status, Request, Query
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 
 from src.app.v1.user.entity.user import User
-from src.app.v1.user.schemas.user import UserResponseSchema, UserUpdateSchema
+from src.app.v1.user.repository.user_repository import PointRepository
+from src.app.v1.user.schemas.user import UserResponseSchema, UserUpdateSchema, PointUseResponse, PointStackResponse
 from src.app.v1.user.service.redis import add_token_to_blacklist, get_kakao_access_token
 from src.app.v1.user.service.social_logout import logout_kakao_service
 from src.core.configs.database_config import settings
@@ -119,3 +121,26 @@ async def logout_me(
     """다른 소셜 로그아웃 추가 가능"""
 
     return {"message": "로그아웃 완료"}
+
+
+# 포인트 적립 내역
+@router.get("/point/stack/{user_id}", response_model=List[PointStackResponse])
+async def get_user_point_stack(user_id: int, period: str = Query("today", regex="^(all|today|week)$")):
+    try:
+        point_stack = await PointRepository.get_user_point_stack(user_id, period)
+        if not point_stack:
+            raise HTTPException(status_code=404, detail="적립된 포인트 내역이 없습니다.")
+        return point_stack
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="내부 서버 오류")
+
+# 포인트 이용내역
+@router.get("/point/use/{user_id}", response_model=List[PointUseResponse])
+async def get_user_point_use(user_id: int, period: str = Query("today", regex="^(all|today|week)$")):
+    try:
+        point_use = await PointRepository.get_user_point_use(user_id)
+        if not point_use:
+            raise HTTPException(status_code=404, detail="사용한 포인트 내역이 없습니다.")
+        return point_use
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="내부 서버 오류")
