@@ -5,6 +5,7 @@ from src.app.api.v1_routes import (
     user_kakao,
     favorite,
     movie,
+    review,
 )
 
 
@@ -17,3 +18,4 @@ api_router.include_router(user_kakao.router, prefix="/user", tags=["User_kakao"]
 
 api_router.include_router(favorite.router, tags=["Favorites"])
 api_router.include_router(movie.router, prefix="/movie", tags=["Movie"])
+api_router.include_router(review.router, tages=["Reviews"])
