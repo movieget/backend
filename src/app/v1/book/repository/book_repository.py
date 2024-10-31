@@ -13,7 +13,6 @@ from src.app.v1.book.schemas.requestDto import BookRequest
 from typing import List, Dict
 import logging
 
-from src.app.v1.user.repository.user_repository import PointRepository
 from src.common.models.consts import StatusEnum
 
 from datetime import datetime, date, time
@@ -292,4 +291,3 @@ class BookRepository:
             return booking
         except DoesNotExist:
             raise HTTPException(status_code=404, detail="예매 정보를 찾을 수 없습니다.")
-
