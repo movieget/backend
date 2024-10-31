@@ -139,8 +139,8 @@ async def get_seat_layout(screen_id: int):
             {
                 "row": row,
                 "seats": [
-                    seat if seat is not None else {"column": None, "status": None}
-                    for seat in seat_layout[row]
+                    seat if seat is not None else {"column": str(index + 1), "status": None}
+                    for index, seat in enumerate(seat_layout[row])
                 ]
             }
             for row in sorted(seat_layout.keys())
