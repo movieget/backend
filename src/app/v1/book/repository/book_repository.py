@@ -1,6 +1,8 @@
 from datetime import date, datetime
 from tortoise.exceptions import DoesNotExist
 from fastapi import HTTPException
+
+from src.app.v1.book.entity import book
 from src.app.v1.book.entity.book import Book
 from src.app.v1.movie.entity.movie import Movie
 from src.app.v1.cinema.entity.cinema import Cinema
@@ -11,6 +13,7 @@ from src.app.v1.book.schemas.requestDto import BookRequest
 from typing import List, Dict
 import logging
 
+from src.app.v1.user.repository.user_repository import PointRepository
 from src.common.models.consts import StatusEnum
 
 from datetime import datetime, date, time
@@ -145,6 +148,10 @@ class BookRepository:
         # Book 인스턴스 생성
         new_booking = await Book.create(user_id=user_id, screen_info_id=booking_data.screen_info_id, status="pending")
         logging.info(f"New booking created with ID: {new_booking.id}")
+
+        points_earned = (booking_data.adult_count + booking_data.child_count) * 100
+        await PointRepository.update_points(user_id, points_earned)
+
         return new_booking
 
     @staticmethod
@@ -273,3 +280,16 @@ class BookRepository:
         if not seats:
             raise HTTPException(status_code=404, detail="지정한 화면 ID에 대한 좌석을 찾을 수 없습니다.")
         return seats
+
+    @staticmethod
+    async def complete_booking(booking_id: int):
+        try:
+            booking = await book.get(id=booking_id)
+
+            if booking.status == StatusEnum.COMPLETED:
+                point_earned = (booking.adult_count + booking.child_count + booking.screening_time) * 100
+                await PointRepository.update_points(booking.user_id, point_earned)
+            return booking
+        except DoesNotExist:
+            raise HTTPException(status_code=404, detail="예매 정보를 찾을 수 없습니다.")
+

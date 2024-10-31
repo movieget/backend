@@ -57,8 +57,8 @@ class UpdateResponse(BaseModel):
 
 
 class SeatInfo(BaseModel):
-    column: str
-    status: bool
+    column: str | None
+    status: bool | None
 
 
 class RowInfo(BaseModel):
