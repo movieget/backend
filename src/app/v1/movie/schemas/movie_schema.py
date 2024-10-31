@@ -1,8 +1,10 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List, Optional
 
+class ActorImage(BaseModel):
+    name: str
+    imageUrl: str
 
-#### 상세 페이지 스키마 ####
 class MovieDetail(BaseModel):
     id: int
     backdropImage: str
@@ -14,13 +16,10 @@ class MovieDetail(BaseModel):
     playing: bool
     overview: str
     trailer: str
-    actorImages: List[str]
+    actorImages: List[ActorImage]
     isLikes: bool
     totalLikes: int
-    rating: int
 
-
-#### 영화 검색 & 무한 스크롤 스키마 ####
 class MovieListItem(BaseModel):
     id: int
     title: str
@@ -32,13 +31,12 @@ class MovieListItem(BaseModel):
     trailerUrl: Optional[str] = None
     duration: Optional[int] = None
     backdropImage: Optional[str] = None
-    actorImages: Optional[List[str]] = None
+    actorImages: Optional[List[ActorImage]] = None
     rating: Optional[int] = None
     isLikes: Optional[bool] = None
     totalLikes: Optional[int] = None
 
-
 class MovieListResponse(BaseModel):
     movies: List[MovieListItem]
     total: int
-    next_page: Optional[int]
+    nextPage: Optional[int] = None
