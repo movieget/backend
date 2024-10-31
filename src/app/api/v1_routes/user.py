@@ -17,8 +17,10 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 # 내 정보 조회
 @router.get("/me", response_model=UserResponseSchema)
-async def read_me(request: Request, access_token: str = Depends(oauth2_scheme)):
-    user = await get_current_user(request, access_token)
+async def read_me(
+        current_user: User = Depends(get_current_user)
+):
+    user = await User.get(id=current_user.id)
 
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
@@ -38,7 +40,10 @@ async def read_me(request: Request, access_token: str = Depends(oauth2_scheme)):
 
 # 내 정보 수정
 @router.patch("/me", response_model=UserResponseSchema)
-async def update_user(user_update: UserUpdateSchema, current_user: User = Depends(get_current_user)):
+async def update_user(
+        user_update: UserUpdateSchema,
+        current_user: User = Depends(get_current_user)
+):
     user = await User.get(id=current_user.id)
 
     # 수정할 항목이 None이 아닐 경우에만 업데이트
@@ -72,8 +77,8 @@ async def update_user(user_update: UserUpdateSchema, current_user: User = Depend
 # 로그아웃
 @router.get("/logout/me")
 async def logout_me(
-    access_token: str = Depends(oauth2_scheme),
-    current_user=Depends(get_current_user),
+        access_token: str = Depends(oauth2_scheme),
+        current_user=Depends(get_current_user),
 ) -> dict:
     # JWT 토큰을 Redis 블랙리스트 추가
     try:

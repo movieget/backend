@@ -31,14 +31,18 @@ async def get_kakao_token(code: str) -> str | None:
 
 async def get_kakao_user_info(access_token: str):
     url = "https://kapi.kakao.com/v2/user/me"
-    headers = {"Authorization": f"Bearer {access_token}"}
+    import pdb; pdb.set_trace()
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-type": "application/x-www-form-urlencoded;charset=utf-8"
+        }
 
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url, headers=headers) as response:
-            if response.status == 200:
-                return await response.json()
-            else:
-                return None
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url, headers=headers)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            raise HTTPException(status_code=response.status_code, detail="Failed to retrieve user info")
 
 
 async def refresh_kakao_access_token(id: int) -> str | None:
