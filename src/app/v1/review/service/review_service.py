@@ -55,6 +55,8 @@ class ReviewService:
         )
 
     # TODO: review_image_url은 다른 upload_handler를 불러 처리해야 됨.
+    async def upload_image_review(self, )
+    
     async def update_review(self, review_id: int, review_request: ReviewUpdateRequest):
         """특정 ID의 리뷰를 수정합니다."""
         # 리뷰 조회
