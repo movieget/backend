@@ -71,7 +71,7 @@ async def kakao_login(code: str, response: Response) -> KakaoOauthResponse:
         except RedisError:
             raise HTTPException(status_code=500, detail="Redis 저장 실패")
 
-        response_model = KakaoOauthResponse(access_token=access_token, id=user.id, profile_image_url=user.image_url)
+        response_model = KakaoOauthResponse(access_token=jwt_access_token, id=user.id, profile_image_url=user.image_url)
 
         return response_model
 
