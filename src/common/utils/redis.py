@@ -1,8 +1,10 @@
 import redis
 from redis.asyncio import from_url
 
+from src.core.configs.database_config import settings
+
 # Redis 연결 설정
-redis_client = from_url("redis://172.17.0.3", decode_responses=True)
+redis_client = from_url(settings.REDIS_URL, decode_responses=True)
 
 
 # Redis 연결 테스트
