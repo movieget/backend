@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel as PydanticModel, ConfigDict
 from typing import List
 
 """# NOTE
@@ -8,22 +8,29 @@ ORM 모델의 속성을 자동으로 DTO 필드에 매핑해줍니다
 """
 
 
-class FavoriteItemResponse(BaseModel):
+class FavoriteItemResponse(PydanticModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
     movie_id: int
 
 
-class UserFavoritesResponse(BaseModel):
+class UserFavoritesResponse(PydanticModel):
     model_config = ConfigDict(from_attributes=True)
     user_id: int
     favorites: List[FavoriteItemResponse]
     # total_count: int
 
 
-class FavoriteAddResponse(BaseModel):
+class FavoriteAddResponse(PydanticModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
+    is_liked: bool
+    user_id: int
+    movie_id: int
+
+
+class FavortieCheckResponse(PydanticModel):
+    model_config = ConfigDict(from_attributes=True)
     is_liked: bool
     user_id: int
     movie_id: int
