@@ -111,42 +111,43 @@ async def get_seat_layout(screen_id: int):
     if not screen_info:
         raise HTTPException(status_code=404, detail="해당 screen_id에 대한 상영관 정보를 찾을 수 없습니다.")
 
-    # 상영관의 최대 열 수를 동적으로 설정
-    max_column = screen_info.screen.total_seats
-
-    # 좌석 데이터를 조회
+    # 해당 상영관의 모든 좌석 데이터를 가져오기
     seats = await Seat.filter(screen_id=screen_info.screen.id).order_by("row", "column").all()
-
     if not seats:
         raise HTTPException(status_code=404, detail="해당 상영관의 좌석 정보를 찾을 수 없습니다.")
 
-    # 좌석 데이터를 행별로 정리
+    # 각 상영관의 최대 좌석 수를 구함
+    max_column = max(seat.column for seat in seats)
+
+    # 좌석 레이아웃을 구성
     seat_layout = {}
     for seat in seats:
         row_label = seat.row
         if row_label not in seat_layout:
-            seat_layout[row_label] = [None] * max_column
+            seat_layout[row_label] = [None] * max_column  # 최대 좌석 수에 맞게 리스트 초기화
 
-        # 비어있는 좌석은 True, 선택된 좌석은 False로 설정
+        # 좌석 정보를 해당 열 위치에 삽입
         seat_layout[row_label][seat.column - 1] = {
             "column": str(seat.column),
             "status": not bool(seat.is_selected) if seat.is_selected is not None else None
         }
 
-    # 없는 좌석을 null 값으로 유지
+    # 포맷팅된 응답 구성
     formatted_response = {
         "screen_id": screen_id,
         "rows": [
-            {"row": row, "seats": [
-                seat if seat is not None else {"column": None, "status": None}
-                for seat in seat_layout[row]
-            ]}
+            {
+                "row": row,
+                "seats": [
+                    seat if seat is not None else {"column": None, "status": None}
+                    for seat in seat_layout[row]
+                ]
+            }
             for row in sorted(seat_layout.keys())
         ]
     }
 
     return formatted_response
-
 
 @router.post("/payment/tosspay", response_model=PaymentRedirectResponse)
 async def redirect_to_payment(booking: BookRequest):
