@@ -14,6 +14,26 @@ class FavoriteService:
         self.user_repository = user_repository
         self.movie_repository = movie_repository
 
+    async def get_user_favorite(self, user_id: int, movie_id: int):
+        try:
+            user = await self.user_repository.get_user(user_id)
+            movie = await self.movie_repository.get_movie(movie_id)
+
+            if not user or not movie:
+                raise BusinessException(ErrorCode.USER_NOT_FOUND, "사용자 또는 영화가 존재하지 않습니다.")
+
+            # 찜 True/False 반환
+            favorite = await self.favorite_repository.get_is_liked(user_id, movie_id)
+
+            # is_liked 값 반환 로직을 Service에서 처리
+            return {
+                    "is_liked": favorite.is_liked if favorite else False,
+                    "user_id": user_id,
+                    "movie_id": movie_id
+                }
+        except Exception as e:
+            raise BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, detail=f"찜 조회를 실패했습니다.")
+
     async def get_user_favorites(self, user_id: int) -> List[Favorite]:
         """사용자의 모든 찜 목록을 가져옵니다."""
         # 사용자 존재 여부 확인
