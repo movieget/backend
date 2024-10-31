@@ -6,8 +6,8 @@ class PaymentRepository:
     @staticmethod
     async def create_payment_data(paymentrequest: PaymentRequest) -> PaymentRequest | None:
         return await Payment.create(
-            paymentrequest.book_id,
-            paymentrequest.paymentKey,
-            paymentrequest.orderId,
-            paymentrequest.amount,
+            book_id=paymentrequest.book_id,
+            paymentKey=paymentrequest.paymentKey,
+            orderId=paymentrequest.orderId,
+            amount=paymentrequest.amount,
         )
