@@ -31,7 +31,6 @@ async def get_kakao_token(code: str) -> str | None:
 
 async def get_kakao_user_info(access_token: str):
     url = "https://kapi.kakao.com/v2/user/me"
-    import pdb; pdb.set_trace()
     headers = {
         "Authorization": f"Bearer {access_token}",
         "Content-type": "application/x-www-form-urlencoded;charset=utf-8"
