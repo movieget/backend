@@ -2,6 +2,18 @@ from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import sys, tracemalloc
 from pathlib import Path
+import os
+from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+from dotenv import load_dotenv
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+import socket
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
 
 # 프로젝트 루트 디렉토리를 sys.path에 추가
 project_root = Path(__file__).parent.parent
@@ -10,9 +22,50 @@ sys.path.append(str(project_root))
 from src.app.api.root import api_router as root_router
 from src.common.handlers.db_handler import lifespan
 
+load_dotenv()
+
+
+def setup_opentelemetry():
+    """OpenTelemetry 설정"""
+
+    # 리소스 속성 설정
+    resource = Resource.create(
+        {
+            "service.name": os.getenv("OTEL_SERVICE_NAME", "fastapi-service"),
+            "service.version": os.getenv("OTEL_SERVICE_VERSION", "1.0.0"),
+            "deployment.environment": os.getenv("OTEL_DEPLOYMENT_ENVIRONMENT", "development"),
+            "host.name": socket.gethostname(),
+        }
+    )
+
+    # TracerProvider 설정
+    tracer_provider = TracerProvider(resource=resource)
+
+    # Elastic APM OTLP 엔드포인트로 내보내기 설정
+    otlp_exporter = OTLPSpanExporter(
+        endpoint=os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT"),
+        headers=os.getenv("OTEL_EXPORTER_OTLP_HEADERS"),
+    )
+    print(os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT"))
+
+    # BatchSpanProcessor를 TracerProvider에 추가
+    span_processor = BatchSpanProcessor(otlp_exporter)
+    tracer_provider.add_span_processor(span_processor)
+
+    # 글로벌 TracerProvider 설정
+    trace.set_tracer_provider(tracer_provider)
+
+
+# OpenTelemetry 설정 적용
+setup_opentelemetry()
+
+
 tracemalloc.start()
 
 app = FastAPI(lifespan=lifespan, debug=True)
+
+# FastAPI 계측
+FastAPIInstrumentor.instrument_app(app)
 
 # NOTE: Turn off in Production
 # app = FastAPI(openapi_url=None)
