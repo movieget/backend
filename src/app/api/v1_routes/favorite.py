@@ -13,11 +13,5 @@ async def get_user_favorites(user_id: int | None = Query(None), favorite_service
 
 
 @router.post("/favorite/{user_id}", response_model=FavoriteAddResponse)
-async def favorite_create(favorite: FavoriteAddRequest, favorite_service: FavoriteService = Depends(get_favorite_service)):
-    return await favorite_service.add_favorite(favorite)
-
-
-@router.delete("/favorite/{user_id}/{movie_id}")
-async def favorite_delete(user_id: int, movie_id: int, favorite_service: FavoriteService = Depends(get_favorite_service)):
-    await favorite_service.delete_favorite(user_id, movie_id)
-    return {"message": "Favorite successfully deleted"}
+async def update_favorite(user_id: int, favoriteaddrequest: FavoriteAddRequest, favorite_service: FavoriteService = Depends(get_favorite_service)):
+    return await favorite_service.favorite_create_toggle(user_id, favoriteaddrequest)

@@ -11,7 +11,6 @@ ORM 모델의 속성을 자동으로 DTO 필드에 매핑해줍니다
 class FavoriteItemResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
-    user_id: int
     movie_id: int
 
 
@@ -19,11 +18,12 @@ class UserFavoritesResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     user_id: int
     favorites: List[FavoriteItemResponse]
-    total_count: int
+    # total_count: int
 
 
 class FavoriteAddResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
+    is_liked: bool
     user_id: int
     movie_id: int

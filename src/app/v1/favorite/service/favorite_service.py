@@ -28,36 +28,29 @@ class FavoriteService:
         favortie_items = [FavoriteItemResponse.model_validate(item) for item in favorites]
 
         # UserFavoritesResponse DTO 생성 및 반환
-        return UserFavoritesResponse(user_id=user_id, favorites=favortie_items, total_count=len(favortie_items))
+        return UserFavoritesResponse(user_id=user_id, favorites=favortie_items)
+        # return UserFavoritesResponse(user_id=user_id, favorites=favortie_items, total_count=len(favortie_items))
 
-    async def add_favorite(self, favorite_add: FavoriteAddRequest) -> FavoriteAddResponse:
+    async def favorite_create_toggle(self, user_id, favoriteaddrequest: FavoriteAddRequest) -> FavoriteAddResponse:
         """영화를 찜 목록에 추가합니다."""
         # 사용자와 영화 존재 여부 확인
-        user = await self.user_repository.get_user(favorite_add.user_id)
-        movie = await self.movie_repository.get_movie(favorite_add.movie_id)
+        user = await self.user_repository.get_user(user_id)
+        movie = await self.movie_repository.get_movie(favoriteaddrequest.movie_id)
         if not user or not movie:
             raise BusinessException(ErrorCode.USER_NOT_FOUND, "사용자 또는 영화가 존재하지 않습니다.")
+
+        # 찜 목록 확인 및 토글
+        favorite = await self.favorite_repository.get_favorite(user_id, favoriteaddrequest.movie_id)
 
         # 이미 찜 목록에 추가되었는지 확인
-        existing_favorite = await self.favorite_repository.get_favorite(favorite_add.user_id, favorite_add.movie_id)
-        if existing_favorite:
-            return FavoriteAddResponse.model_validate(existing_favorite)
-
-        # 새로운 찜 생성
-        favorite = await self.favorite_repository.add_favorite(favorite_add.user_id, favorite_add.movie_id)
+        if favorite:
+            # 이미 존재하는 경우, is_liked 상태를 토글
+            favorite.is_liked = not favorite.is_liked
+            await favorite.save()
+        else:
+            # 존재하지 않는 경우, 새로 생성하고 is_liked를 True로 설정
+            favorite = await Favorite.create(user_id=user_id, movie_id=favoriteaddrequest.movie_id, is_liked=True)
         if not favorite:
-            raise BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, "찜 생성 실패")
+            raise BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, "찜 생성을 실패했습니다.")
 
         return FavoriteAddResponse.model_validate(favorite)
-
-    async def delete_favorite(self, user_id: int, movie_id: int) -> None:
-        """찜 목록에서 영화를 제거합니다."""
-        user = await self.user_repository.get_user(user_id)
-        movie = await self.movie_repository.get_movie(movie_id)
-        if not user or not movie:
-            raise BusinessException(ErrorCode.USER_NOT_FOUND, "사용자 또는 영화가 존재하지 않습니다.")
-
-        # 찜 삭제 시도
-        success = await self.favorite_repository.delete_favorite(user_id, movie_id)
-        if not success:
-            raise BusinessException(ErrorCode.USER_NOT_FOUND, "찜을 찾을 수 없고, 삭제가 불가합니다.")
