@@ -79,4 +79,5 @@ jobs:
           -e KAKAO_CLIENT_ID=${{ secrets.KAKAO_CLIENT_ID }} \
           -e SECRET_KEY=${{ secrets.SECRET_KEY }} \
           -e KAKAO_REDIRECT_URI=${{ secrets.KAKAO_REDIRECT_URI }} \
+          -e REDIS_URL=${{ secrets.REDIS_URL }} \
           ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_REPOSITORY }}:${{ github.ref_name }}-latest 
