@@ -13,11 +13,13 @@ TORTOISE_ORM = {
     },
 }
 
+
 class Settings:
     BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     DATABASE_URL = TORTOISE_ORM["connections"]["default"]
     TMDB_API_KEY = os.getenv("TMDB_API_KEY")
     TMDB_BASE_URL = "https://api.themoviedb.org/3"
+
 
 settings = Settings()
 

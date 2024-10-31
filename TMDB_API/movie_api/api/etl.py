@@ -3,6 +3,7 @@ from TMDB_API.movie_api.etl.etl_job import run_etl
 
 router = APIRouter()
 
+
 @router.post("/run/")
 async def run_etl_endpoint():
     try:

@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field, validator
 from typing import Optional
 from datetime import date, datetime
 
+
 class MovieBase(BaseModel):
     """
     영화 정보의 기본 Pydantic 모델
@@ -19,6 +20,7 @@ class MovieBase(BaseModel):
         trailer_url (Optional[str]): 영화 예고편 URL (선택적)
         age_rating (str): 영화 연령 등급 (기본값: "all")
     """
+
     title: str = Field(..., description="영화 제목")
     genre: str = Field(default="Action", description="영화 장르")
     release_date: date = Field(..., description="개봉일")
@@ -31,7 +33,7 @@ class MovieBase(BaseModel):
     trailer_url: Optional[str] = Field(default="", description="영화 예고편 URL")
     age_rating: str = Field(default="all", description="영화 연령 등급")
 
-    @validator('release_date', pre=True)
+    @validator("release_date", pre=True)
     def parse_release_date(cls, value):
         """
         release_date를 문자열에서 date 객체로 변환합니다.
@@ -46,15 +48,18 @@ class MovieBase(BaseModel):
             ValueError: 날짜 형식이 올바르지 않을 경우
         """
         if isinstance(value, str):
-            return datetime.strptime(value, '%Y-%m-%d').date()
+            return datetime.strptime(value, "%Y-%m-%d").date()
         return value
+
 
 class MovieCreate(MovieBase):
     """
     영화 생성을 위한 Pydantic 모델
     MovieBase를 상속받아 추가적인 검증이나 필드를 정의할 수 있습니다.
     """
+
     pass
+
 
 class MovieResponse(MovieBase):
     """
@@ -65,6 +70,7 @@ class MovieResponse(MovieBase):
     created_at (datetime): 레코드 생성 시간
     updated_at (datetime): 레코드 최종 수정 시간
     """
+
     id: int = Field(..., description="영화의 고유 식별자")
     created_at: datetime = Field(..., description="레코드 생성 시간")
     updated_at: datetime = Field(..., description="레코드 최종 수정 시간")
@@ -86,6 +92,6 @@ class MovieResponse(MovieBase):
                 "trailer_url": "https://example.com/movie_trailer",
                 "age_rating": "15+",
                 "created_at": "2023-01-01T00:00:00",
-                "updated_at": "2023-01-01T00:00:00"
+                "updated_at": "2023-01-01T00:00:00",
             }
         }

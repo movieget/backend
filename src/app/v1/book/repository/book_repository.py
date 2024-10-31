@@ -215,7 +215,7 @@ class BookRepository:
         logging.info(f"Fetching canceled bookings for user_id: {user_id}")
 
         canceled_bookings = (
-            await Book.filter(user_id=user_id, status=StatusEnum.CANCELED)
+            await Book.filter(user_id=user_id, status=StatusEnum.CANCELLED)
             .prefetch_related(
                 "screen_info__movie",
                 "screen_info__screen",

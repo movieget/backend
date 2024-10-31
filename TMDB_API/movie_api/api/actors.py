@@ -7,6 +7,7 @@ import httpx
 
 router = APIRouter()
 
+
 async def fetch_movie_credits_from_tmdb(movie_id: int) -> dict:
     """
     TMDB API에서 특정 영화의 출연진 정보를 가져옵니다.
@@ -21,11 +22,7 @@ async def fetch_movie_credits_from_tmdb(movie_id: int) -> dict:
         HTTPException: API 요청 실패 시
     """
     url = f"{settings.TMDB_BASE_URL}/movie/{movie_id}"
-    params = {
-        "api_key": settings.TMDB_API_KEY,
-        "append_to_response": "credits",
-        "language": "ko-KR"
-    }
+    params = {"api_key": settings.TMDB_API_KEY, "append_to_response": "credits", "language": "ko-KR"}
 
     async with httpx.AsyncClient() as client:
         try:
@@ -33,8 +30,8 @@ async def fetch_movie_credits_from_tmdb(movie_id: int) -> dict:
             response.raise_for_status()
             return response.json()
         except httpx.HTTPStatusError as e:
-            raise HTTPException(status_code=e.response.status_code,
-                                detail=f"TMDB API 요청 실패: {str(e)}")
+            raise HTTPException(status_code=e.response.status_code, detail=f"TMDB API 요청 실패: {str(e)}")
+
 
 @router.post("/fetch-actor-images/", response_model=List[ActorImageResponse], name="fetch_actor_images")
 async def fetch_and_save_actor_images(movie_id: int = Query(...)):
@@ -51,15 +48,15 @@ async def fetch_and_save_actor_images(movie_id: int = Query(...)):
         HTTPException: 배우 이미지 정보 가져오기 또는 저장 실패 시
     """
     actor_data = await fetch_movie_credits_from_tmdb(movie_id)
-    cast = actor_data.get('credits', {}).get('cast', [])[:10]  # 상위 10명의 출연진으로 제한
+    cast = actor_data.get("credits", {}).get("cast", [])[:10]  # 상위 10명의 출연진으로 제한
     results = []
 
     if not cast:
         return results  # 출연진이 없는 경우 빈 리스트 반환
 
     for actor in cast:
-        actor_id = actor['id']
-        profile_path = actor.get('profile_path')
+        actor_id = actor["id"]
+        profile_path = actor.get("profile_path")
 
         if profile_path:
             image_url = f"https://image.tmdb.org/t/p/original{profile_path}"
@@ -67,6 +64,7 @@ async def fetch_and_save_actor_images(movie_id: int = Query(...)):
             results.append(actor_image)
 
     return results
+
 
 async def save_or_get_actor_image(image_url: str, movie_id: int) -> ActorImage:
     """

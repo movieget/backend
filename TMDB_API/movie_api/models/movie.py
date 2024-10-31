@@ -1,6 +1,7 @@
 from tortoise import fields
 from tortoise.models import Model
 
+
 class Movie(Model):
     """
     영화 정보를 저장하는 데이터베이스 모델
@@ -21,6 +22,7 @@ class Movie(Model):
         created_at (datetime): 레코드 생성 시간
         updated_at (datetime): 레코드 최종 수정 시간
     """
+
     id = fields.IntField(pk=True, description="영화의 고유 식별자")
     title = fields.CharField(max_length=255, description="영화 제목")
     genre = fields.CharField(max_length=50, default="Action", description="영화 장르")
