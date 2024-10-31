@@ -50,7 +50,7 @@ class PaymentService:
 
         async with httpx.AsyncClient() as client:
             try:
-                response = await client.post(f"{self.api_url}/payments/confirm", headers=headers, json=payload)
+                response = await client.post(f"{self.api_url}", headers=headers, json=payload)
 
                 if response.status_code == 200:
                     toss_response = response.json()
