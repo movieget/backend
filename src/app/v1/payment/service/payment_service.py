@@ -59,7 +59,7 @@ class PaymentService:
                     payment_response = PaymentResponse(
                         paymentKey=toss_response["paymentKey"],
                         orderId=toss_response["orderId"],
-                        amount=toss_response["amount"],
+                        amount=toss_response["totalAmount"],
                         **paymentrequest.model_dump(exclude={"paymentKey", "orderId", "amount"}),
                     )
 
