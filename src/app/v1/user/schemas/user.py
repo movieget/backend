@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
 
 from pydantic import BaseModel, Field
@@ -63,3 +65,20 @@ class UserUpdateSchema(BaseModel):
     birthday: str | None = Field(None, description="생일")
     image_url: str | None = Field(None, description="프로필 이미지 URL")
     email: EmailStr | None = Field(None, description="이메일 주소")
+
+# point 적립내역
+class PointStackResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    type: str
+    accumulation_date: datetime
+    movie_title: str
+    points_earned: int
+    remaining_points: int
+
+class PointUseResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    booking_code: int
+    movie_title: str
+    usage_date: datetime
+    used_points: int
+    remaining_points: int

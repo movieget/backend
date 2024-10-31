@@ -18,6 +18,7 @@ from src.app.v1.book.schemas.responseDto import (
 )
 
 from src.app.v1.book.repository.book_repository import BookRepository
+from src.app.v1.screen.entity.screen_info import ScreenInfo
 from src.app.v1.screen.entity.seat import Seat
 from src.app.v1.user.repository.user_repository import UserRepository
 from src.app.v1.book.schemas.responseDto import BookResponse
@@ -104,37 +105,49 @@ async def booking_options(screening_date: str = Query(..., description="상영 �
 
 @router.get("/{screen_id}", response_model=SeatLayoutResponse)
 async def get_seat_layout(screen_id: int):
-    # 특정 screen_id에 대한 좌석 데이터를 조회
-    seats = await Seat.filter(screen_id=screen_id).order_by("row", "column").all()
+    # ScreenInfo 및 관련 Screen 데이터를 조회
+    screen_info = await ScreenInfo.get(id=screen_id).prefetch_related("screen")
 
+    if not screen_info:
+        raise HTTPException(status_code=404, detail="해당 screen_id에 대한 상영관 정보를 찾을 수 없습니다.")
+
+    # 해당 상영관의 모든 좌석 데이터를 가져오기
+    seats = await Seat.filter(screen_id=screen_info.screen.id).order_by("row", "column").all()
     if not seats:
         raise HTTPException(status_code=404, detail="해당 상영관의 좌석 정보를 찾을 수 없습니다.")
 
-    # 좌석 데이터를 행별로 정리
+    # 각 상영관의 최대 좌석 수를 구함
+    max_column = max(seat.column for seat in seats)
+
+    # 좌석 레이아웃을 구성
     seat_layout = {}
     for seat in seats:
         row_label = seat.row
         if row_label not in seat_layout:
-            seat_layout[row_label] = []
-        seat_layout[row_label].append({"column": str(seat.column), "status": bool(seat.is_selected) if seat.is_selected is not None else None})
+            seat_layout[row_label] = [None] * max_column  # 최대 좌석 수에 맞게 리스트 초기화
 
+        # 좌석 정보를 해당 열 위치에 삽입
+        seat_layout[row_label][seat.column - 1] = {
+            "column": str(seat.column),
+            "status": not bool(seat.is_selected) if seat.is_selected is not None else None
+        }
+
+    # 포맷팅된 응답 구성
     formatted_response = {
         "screen_id": screen_id,
-        "rows": [{"row": row, "seats": seat_layout[row]} for row in sorted(seat_layout.keys())],  # row 기준으로 정렬
+        "rows": [
+            {
+                "row": row,
+                "seats": [
+                    seat if seat is not None else {"column": None, "status": None}
+                    for seat in seat_layout[row]
+                ]
+            }
+            for row in sorted(seat_layout.keys())
+        ]
     }
+
     return formatted_response
-    # seat_layout = {}
-    # for seat in seats:
-    #     if seat.row not in seat_layout:
-    #         seat_layout[seat.row] = []
-    #     seat_layout[seat.row].append({
-    #         "row": seat.seat_number,
-    #         "column": seat.column,
-    #         "status": seat.is_selected
-    #     })
-
-    # return seat_layout
-
 
 @router.post("/payment/tosspay", response_model=PaymentRedirectResponse)
 async def redirect_to_payment(booking: BookRequest):

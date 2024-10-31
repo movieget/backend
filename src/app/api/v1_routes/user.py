@@ -1,11 +1,14 @@
 from datetime import datetime
+from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+
+from fastapi import APIRouter, Depends, HTTPException, status, Request, Query, Response
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 
 from src.app.v1.user.entity.user import User
-from src.app.v1.user.schemas.user import UserResponseSchema, UserUpdateSchema
+from src.app.v1.user.repository.user_repository import PointRepository
+from src.app.v1.user.schemas.user import UserResponseSchema, UserUpdateSchema, PointUseResponse, PointStackResponse
 from src.app.v1.user.service.redis import add_token_to_blacklist, get_kakao_access_token
 from src.app.v1.user.service.social_logout import logout_kakao_service
 from src.core.configs.database_config import settings
@@ -17,8 +20,10 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 # 내 정보 조회
 @router.get("/me", response_model=UserResponseSchema)
-async def read_me(request: Request, access_token: str = Depends(oauth2_scheme)):
-    user = await get_current_user(request, access_token)
+async def read_me(
+        current_user: User = Depends(get_current_user)
+):
+    user = await User.get(id=current_user.id)
 
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
@@ -38,7 +43,10 @@ async def read_me(request: Request, access_token: str = Depends(oauth2_scheme)):
 
 # 내 정보 수정
 @router.patch("/me", response_model=UserResponseSchema)
-async def update_user(user_update: UserUpdateSchema, current_user: User = Depends(get_current_user)):
+async def update_user(
+        user_update: UserUpdateSchema,
+        current_user: User = Depends(get_current_user)
+):
     user = await User.get(id=current_user.id)
 
     # 수정할 항목이 None이 아닐 경우에만 업데이트
@@ -72,45 +80,70 @@ async def update_user(user_update: UserUpdateSchema, current_user: User = Depend
 # 로그아웃
 @router.get("/logout/me")
 async def logout_me(
-    access_token: str = Depends(oauth2_scheme),
-    current_user=Depends(get_current_user),
+        request: Request,
+        response: Response,
+        access_token: str = Depends(oauth2_scheme),
 ) -> dict:
     # JWT 토큰을 Redis 블랙리스트 추가
     try:
         # JWT 디코딩 및 jti와 만료 시간 추출
-        payload = jwt.decode(access_token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-        jti = payload.get("jti")
-        exp = payload.get("exp")
-        id = payload.get("id")
+        access_payload = jwt.decode(access_token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        access_jti = access_payload.get("jti")
+        access_exp = access_payload.get("exp")
 
-        # Redis의 카카오액세스토큰 가져오기 (for 소셜 로그아웃)
-        kakao_access_token = await get_kakao_access_token(id=id)
-
-        if not jti or exp is None:
+        if not access_jti or access_exp is None:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="유효하지 않은 토큰입니다.")
 
-        expires_in = exp - int(datetime.utcnow().timestamp())
-        if expires_in <= 0:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="만료된 토큰입니다.")
+        # 액세스토큰 -> 블랙리스트
+        access_expires_in = access_exp - int(datetime.utcnow().timestamp())
+        if access_expires_in > 0:
+            await add_token_to_blacklist(access_jti, access_expires_in)
 
-        # 블랙리스트 추가
-        await add_token_to_blacklist(jti, expires_in)
+        # 쿠키에서 리프레시토큰 가져오기
+        refresh_token = request.cookies.get("refresh_token")
+        if refresh_token:
+            refresh_payload = jwt.decode(refresh_token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+            refresh_jti = refresh_payload.get("jti")
+            refresh_exp = refresh_payload.get("exp")
+
+            if not refresh_jti or refresh_exp is None:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="유효하지 않은 토큰입니다.")
+
+            # 리프레시 토큰 블랙리스트 추가
+            refresh_expires_in = refresh_exp - int(datetime.utcnow().timestamp())
+            if refresh_expires_in > 0:
+                await add_token_to_blacklist(refresh_jti, refresh_expires_in)
+
+            # 리프레시 토큰 만료시키기 (쿠키에서 제거)
+            response.delete_cookie("refresh_token")
+
+        # 액세스 토큰 만료시키기
+        response.headers["Authorization"] = ""
 
     except JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="유효하지 않은 토큰입니다.")
 
-    # 소셜 로그아웃 요청
-    if current_user.oauth_provider == "kakao":
-        success = await logout_kakao_service(
-            provider=current_user.oauth_provider,
-            access_token=kakao_access_token,
-        )
-        if not success:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"{current_user.oauth_provider} 로그아웃 실패",
-            )
-
-    """다른 소셜 로그아웃 추가 가능"""
-
     return {"message": "로그아웃 완료"}
+
+
+# 포인트 적립 내역
+@router.get("/point/stack/{user_id}", response_model=List[PointStackResponse])
+async def get_user_point_stack(user_id: int, period: str = Query("today", regex="^(all|today|week)$")):
+    try:
+        point_stack = await PointRepository.get_user_point_stack(user_id, period)
+        if not point_stack:
+            raise HTTPException(status_code=404, detail="적립된 포인트 내역이 없습니다.")
+        return point_stack
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="내부 서버 오류")
+
+# 포인트 이용내역
+@router.get("/point/use/{user_id}", response_model=List[PointUseResponse])
+async def get_user_point_use(user_id: int, period: str = Query("today", regex="^(all|today|week)$")):
+    try:
+        point_use = await PointRepository.get_user_point_use(user_id)
+        if not point_use:
+            raise HTTPException(status_code=404, detail="사용한 포인트 내역이 없습니다.")
+        return point_use
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="내부 서버 오류")

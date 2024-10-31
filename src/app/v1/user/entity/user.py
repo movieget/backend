@@ -13,6 +13,7 @@ class User(BaseModel, models.Model):
     oauth_provider = fields.CharField(max_length=20)
     birthday = fields.CharField(max_length=10, null=True)
     kakao_id = fields.CharField(max_length=50, unique=True, null=True)
+    point = fields.IntField()
     is_active = fields.BooleanField(default=True)
     is_deleted = fields.BooleanField(default=False)
     last_login = fields.DatetimeField(null=True)

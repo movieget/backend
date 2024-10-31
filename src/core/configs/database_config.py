@@ -59,6 +59,7 @@ class Settings:
     ALGORITHM = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES = timedelta(minutes=15)
     REFRESH_TOKEN_EXPIRE_DAYS = timedelta(days=7)
+    REDIS_URL = os.getenv("REDIS_URL")
 
 
 settings = Settings()
