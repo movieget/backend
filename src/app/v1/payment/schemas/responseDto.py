@@ -18,7 +18,7 @@ class PaymentResponse(PydanticModel):
     child_count: str
     paymentKey: str
     orderId: str
-    amount: str
+    amount: int
 
 
 class PaymentErrorResponse(PydanticModel):

@@ -8,7 +8,7 @@ class Review(BaseModel, models.Model):
     title = fields.CharField(max_length=255)
     username = fields.CharField(max_length=20)
     contents = fields.TextField(null=False)
-    review_image_url = fields.CharField(max_length=50)
+    review_image_url = fields.CharField(max_length=255, null=True)
     rating = fields.CharEnumField(RatingEnum, max_length=20, default=RatingEnum.no_star)  # 수정 필요: IntEnumField로 변경
     registration_date = fields.DateField(auto_now_add=True)
     user = fields.ForeignKeyField("models.User", related_name="reviews", on_delete=fields.CASCADE)

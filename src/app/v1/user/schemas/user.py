@@ -2,8 +2,6 @@ from datetime import datetime
 
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
 
-from pydantic import BaseModel, Field
-
 # from entity.accounts import BankNum, AccountType
 
 #
@@ -77,7 +75,7 @@ class PointStackResponse(BaseModel):
 
 class PointUseResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    booking_code: int
+    booking_code: str | int
     movie_title: str
     usage_date: datetime
     used_points: int

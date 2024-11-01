@@ -1,9 +1,18 @@
-from typing import List
+from fastapi import File
+import uuid, urllib.parse
+from botocore.exceptions import BotoCoreError, ClientError
+import os
+from dotenv import load_dotenv
+from typing import List, Dict
+from src.common.utils.aws_s3 import s3_client
 from src.app.v1.review.entity.review import Review
 from src.common.handlers.exception_handler import BusinessException, ErrorCode
 from src.app.v1.review.repository.review_repository import ReviewRepository
 from src.app.v1.user.repository.user_repository import UserRepository
 from src.app.v1.review.schemas.resquestDto import ReviewCreateRequest, ReviewUpdateRequest
+from src.app.v1.review.schemas.responseDto import ReviewImageResponse
+
+load_dotenv()
 
 
 class ReviewService:
@@ -55,6 +64,24 @@ class ReviewService:
         )
 
     # TODO: review_image_url은 다른 upload_handler를 불러 처리해야 됨.
+    async def upload_review_image(self, user_id, image_file) -> Dict:
+        # 사용자 확인
+        user = await self.user_repository.get_user(user_id)
+        if not user:
+            raise BusinessException(ErrorCode.USER_NOT_FOUND, f"사용자 {user_id}번 ID를 찾을 수 없습니다.")
+
+        filename = f"{str(uuid.uuid4())}.jpg"
+        s3_key = f"{user_id}/{filename}"
+
+        try:
+            s3_client.upload_fileobj(image_file.file, os.getenv("AWS_BUCKET_NAME"), s3_key)
+        except (BotoCoreError, ClientError) as e:
+            raise BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, detail=f"S3 upload fails: {str(e)}")
+
+        url = f"https://s3-ap-northeast-2.amazonaws.com/{os.getenv("AWS_BUCKET_NAME")}/{urllib.parse.quote(s3_key, safe='~()*!.')}"
+
+        return ReviewImageResponse(review_image_url=url)
+
     async def update_review(self, review_id: int, review_request: ReviewUpdateRequest):
         """특정 ID의 리뷰를 수정합니다."""
         # 리뷰 조회
