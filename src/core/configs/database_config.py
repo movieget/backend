@@ -24,6 +24,7 @@ Tortoise_Models = [
     "src.app.v1.screen.entity.seat",
     "src.app.v1.book.entity.bookseat",
     "src.app.v1.movie.entity.actor_image",
+    "src.app.v1.user.entity.point_history",
     "aerich.models",
 ]
 

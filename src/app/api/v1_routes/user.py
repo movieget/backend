@@ -126,6 +126,7 @@ async def logout_me(
     return {"message": "로그아웃 완료"}
 
 
+
 # 포인트 적립 내역
 @router.get("/point/stack/{user_id}", response_model=List[PointStackResponse])
 async def get_user_point_stack(user_id: int, period: str = Query("today", regex="^(all|today|week)$")):
@@ -141,7 +142,7 @@ async def get_user_point_stack(user_id: int, period: str = Query("today", regex=
 @router.get("/point/use/{user_id}", response_model=List[PointUseResponse])
 async def get_user_point_use(user_id: int, period: str = Query("today", regex="^(all|today|week)$")):
     try:
-        point_use = await PointRepository.get_user_point_use(user_id)
+        point_use = await PointRepository.get_user_point_use(user_id, period)
         if not point_use:
             raise HTTPException(status_code=404, detail="사용한 포인트 내역이 없습니다.")
         return point_use
