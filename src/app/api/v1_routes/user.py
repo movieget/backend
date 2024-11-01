@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime
 from typing import List
 
@@ -9,6 +10,7 @@ from jose import JWTError, jwt
 from src.app.v1.user.entity.user import User
 from src.app.v1.user.repository.user_repository import PointRepository
 from src.app.v1.user.schemas.user import UserResponseSchema, UserUpdateSchema, PointUseResponse, PointStackResponse
+from src.app.v1.user.service.delete_user import schedule_account_deletion
 from src.app.v1.user.service.redis import add_token_to_blacklist, get_kakao_access_token
 from src.app.v1.user.service.social_logout import logout_kakao_service
 from src.core.configs.database_config import settings
@@ -126,6 +128,23 @@ async def logout_me(
     return {"message": "로그아웃 완료"}
 
 
+@router.delete("/me")
+async def delete_user(current_user: User = Depends(get_current_user)):
+    # is_deleted를 1로 업데이트
+    user = await User.get(id=current_user.id)
+
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    user.is_deleted = True
+    await user.save()
+
+    # 비동기 작업 생성 (7일 후에 사용자 정보를 DB에서 삭제)
+    asyncio.create_task(schedule_account_deletion(current_user.id))
+
+    return {"message": "회원 탈퇴 요청이 완료되었습니다. 7일 후에 계정이 삭제됩니다."}
+
+
 # 포인트 적립 내역
 @router.get("/point/stack/{user_id}", response_model=List[PointStackResponse])
 async def get_user_point_stack(user_id: int, period: str = Query("today", regex="^(all|today|week)$")):
@@ -136,6 +155,7 @@ async def get_user_point_stack(user_id: int, period: str = Query("today", regex=
         return point_stack
     except Exception as e:
         raise HTTPException(status_code=500, detail="내부 서버 오류")
+
 
 # 포인트 이용내역
 @router.get("/point/use/{user_id}", response_model=List[PointUseResponse])
