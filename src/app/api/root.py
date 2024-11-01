@@ -2,7 +2,6 @@ from fastapi import APIRouter
 from src.app.api.v1_routes import (
     user,
     book,
-    user_kakao,
     favorite,
     movie,
     review,
