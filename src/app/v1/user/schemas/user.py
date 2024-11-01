@@ -77,7 +77,7 @@ class PointStackResponse(BaseModel):
 
 class PointUseResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    booking_code: int
+    booking_code: str | int
     movie_title: str
     usage_date: datetime
     used_points: int

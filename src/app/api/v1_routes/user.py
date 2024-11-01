@@ -145,6 +145,7 @@ async def delete_user(current_user: User = Depends(get_current_user)):
     return {"message": "회원 탈퇴 요청이 완료되었습니다. 7일 후에 계정이 삭제됩니다."}
 
 
+
 # 포인트 적립 내역
 @router.get("/point/stack/{user_id}", response_model=List[PointStackResponse])
 async def get_user_point_stack(user_id: int, period: str = Query("today", regex="^(all|today|week)$")):
@@ -161,7 +162,7 @@ async def get_user_point_stack(user_id: int, period: str = Query("today", regex=
 @router.get("/point/use/{user_id}", response_model=List[PointUseResponse])
 async def get_user_point_use(user_id: int, period: str = Query("today", regex="^(all|today|week)$")):
     try:
-        point_use = await PointRepository.get_user_point_use(user_id)
+        point_use = await PointRepository.get_user_point_use(user_id, period)
         if not point_use:
             raise HTTPException(status_code=404, detail="사용한 포인트 내역이 없습니다.")
         return point_use
