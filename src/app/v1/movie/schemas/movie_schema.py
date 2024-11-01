@@ -1,42 +1,43 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from typing import List, Optional
 
 class ActorImage(BaseModel):
     name: str
-    imageUrl: str
+    image_url: str
 
 class MovieDetail(BaseModel):
     id: int
-    backdropImage: str
-    posterImage: str
+    backdrop_image: str
+    poster_image: str
     title: str
-    age: str
+    age_rating: str
     genre: str
     duration: int
     playing: bool
     overview: str
-    trailer: str
-    actorImages: List[ActorImage]
-    isLikes: bool
-    totalLikes: int
+    trailer_url: str
+    actor_images: List[ActorImage]
+    is_likes: bool
+    total_likes: int
+    rating: Optional[int] = None
 
 class MovieListItem(BaseModel):
     id: int
     title: str
-    posterImage: str
-    age: str
+    poster_image: str
+    age_rating: str
     genre: str
     playing: bool
     overview: Optional[str] = None
-    trailerUrl: Optional[str] = None
+    trailer_url: Optional[str] = None
     duration: Optional[int] = None
-    backdropImage: Optional[str] = None
-    actorImages: Optional[List[ActorImage]] = None
+    backdrop_image: Optional[str] = None
+    actor_images: Optional[List[ActorImage]] = None
     rating: Optional[int] = None
-    isLikes: Optional[bool] = None
-    totalLikes: Optional[int] = None
+    is_likes: Optional[bool] = None
+    total_likes: Optional[int] = None
 
 class MovieListResponse(BaseModel):
     movies: List[MovieListItem]
     total: int
-    nextPage: Optional[int] = None
+    next_page: Optional[int] = None
