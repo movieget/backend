@@ -1,46 +1,30 @@
-import asyncio
-from datetime import datetime
 from typing import List
 
-
-from fastapi import APIRouter, Depends, HTTPException, status, Request, Query, Response
+from fastapi import APIRouter, Depends, HTTPException, Request, Query, Response
 from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError, jwt
 
 from src.app.v1.user.entity.user import User
 from src.app.v1.user.repository.user_repository import PointRepository
+from src.app.v1.user.schemas.oauth import KakaoOauthResponse
 from src.app.v1.user.schemas.user import UserResponseSchema, UserUpdateSchema, PointUseResponse, PointStackResponse
-from src.app.v1.user.service.delete_user import schedule_account_deletion
-from src.app.v1.user.service.redis import add_token_to_blacklist, get_kakao_access_token
-from src.app.v1.user.service.social_logout import logout_kakao_service
-from src.core.configs.database_config import settings
+from src.app.v1.user.service.login_kakao import login_kakao_route
+from src.app.v1.user.service.user_service import delete_user_account, get_user_info, logout_user, update_user_info
 from src.core.security import get_current_user
 
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
+# 카카오 로그인
+@router.get("/login/kakao", response_model=KakaoOauthResponse)
+async def login_kakao(code: str, response: Response):
+    return await login_kakao_route(code, response)
+
+
 # 내 정보 조회
 @router.get("/me", response_model=UserResponseSchema)
-async def read_me(
-        current_user: User = Depends(get_current_user)
-):
-    user = await User.get(id=current_user.id)
-
-    if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-
-    return UserResponseSchema(
-        id=user.id,
-        kakao_id=user.kakao_id,
-        nickname=user.nickname,
-        email=user.email,
-        username=user.username,
-        birthday=user.birthday or "",
-        phone_number=user.phone_number or "",
-        oauth_provider=user.oauth_provider or "",
-        image_url=user.image_url or "",
-    )
+async def read_me(current_user: User = Depends(get_current_user)):
+    return await get_user_info(current_user.id)
 
 
 # 내 정보 수정
@@ -49,34 +33,7 @@ async def update_user(
         user_update: UserUpdateSchema,
         current_user: User = Depends(get_current_user)
 ):
-    user = await User.get(id=current_user.id)
-
-    # 수정할 항목이 None이 아닐 경우에만 업데이트
-    if user_update.nickname is not None:
-        user.nickname = user_update.nickname
-    if user_update.email is not None:
-        user.email = user_update.email
-    if user_update.phone_number is not None:
-        user.phone_number = user_update.phone_number
-    if user_update.birthday is not None:
-        user.birthday = user_update.birthday
-    if user_update.image_url is not None:
-        user.image_url = user_update.image_url
-
-    await user.save()  # 변경 사항 저장
-
-    # UserResponseSchema에 맞게 반환
-    return UserResponseSchema(
-        id=user.id,
-        kakao_id=user.kakao_id,
-        nickname=user.nickname,
-        email=user.email,
-        username=user.username,
-        birthday=user.birthday or "",
-        phone_number=user.phone_number or "",
-        oauth_provider=user.oauth_provider or "",
-        image_url=user.image_url or "",
-    )
+    return await update_user_info(current_user.id, user_update)
 
 
 # 로그아웃
@@ -86,63 +43,14 @@ async def logout_me(
         response: Response,
         access_token: str = Depends(oauth2_scheme),
 ) -> dict:
-    # JWT 토큰을 Redis 블랙리스트 추가
-    try:
-        # JWT 디코딩 및 jti와 만료 시간 추출
-        access_payload = jwt.decode(access_token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-        access_jti = access_payload.get("jti")
-        access_exp = access_payload.get("exp")
-
-        if not access_jti or access_exp is None:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="유효하지 않은 토큰입니다.")
-
-        # 액세스토큰 -> 블랙리스트
-        access_expires_in = access_exp - int(datetime.utcnow().timestamp())
-        if access_expires_in > 0:
-            await add_token_to_blacklist(access_jti, access_expires_in)
-
-        # 쿠키에서 리프레시토큰 가져오기
-        refresh_token = request.cookies.get("refresh_token")
-        if refresh_token:
-            refresh_payload = jwt.decode(refresh_token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-            refresh_jti = refresh_payload.get("jti")
-            refresh_exp = refresh_payload.get("exp")
-
-            if not refresh_jti or refresh_exp is None:
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="유효하지 않은 토큰입니다.")
-
-            # 리프레시 토큰 블랙리스트 추가
-            refresh_expires_in = refresh_exp - int(datetime.utcnow().timestamp())
-            if refresh_expires_in > 0:
-                await add_token_to_blacklist(refresh_jti, refresh_expires_in)
-
-            # 리프레시 토큰 만료시키기 (쿠키에서 제거)
-            response.delete_cookie("refresh_token")
-
-        # 액세스 토큰 만료시키기
-        response.headers["Authorization"] = ""
-
-    except JWTError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="유효하지 않은 토큰입니다.")
-
-    return {"message": "로그아웃 완료"}
+    refresh_token = request.cookies.get("refresh_token")
+    return await logout_user(access_token, refresh_token, response)
 
 
+# 회원 탈퇴
 @router.delete("/me")
-async def delete_user(current_user: User = Depends(get_current_user)):
-    # is_deleted를 1로 업데이트
-    user = await User.get(id=current_user.id)
-
-    if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-
-    user.is_deleted = True
-    await user.save()
-
-    # 비동기 작업 생성 (7일 후에 사용자 정보를 DB에서 삭제)
-    asyncio.create_task(schedule_account_deletion(current_user.id))
-
-    return {"message": "회원 탈퇴 요청이 완료되었습니다. 7일 후에 계정이 삭제됩니다."}
+async def delete_user(current_user: User = Depends(get_current_user)) -> dict:
+    return await delete_user_account(current_user.id)
 
 
 

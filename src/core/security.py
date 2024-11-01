@@ -1,10 +1,9 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import uuid
 
 from fastapi import Depends, HTTPException, status, Request, Response
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
-from tortoise.exceptions import DoesNotExist
 
 from src.app.v1.user.entity.user import User
 from src.app.v1.user.schemas.oauth import KakaoOauthResponse
@@ -19,7 +18,7 @@ def create_jwt_token(data: dict, expires_delta: timedelta) -> str:
     payload = data.copy()
 
     jti = str(uuid.uuid4())  # 유니크한 jti 생성 (jti = JWT ID)
-    expire = datetime.utcnow() + expires_delta  # 만료기간 설정
+    expire = datetime.now(timezone.utc) + expires_delta  # 만료기간 설정
     payload.update({"jti": jti, "exp": expire})
 
     # 토큰 설정
@@ -57,7 +56,7 @@ async def get_current_user(
             raise HTTPException(status_code=401, detail="Token blacklisted")
 
         # 액세스토큰 만료시간 확인 -> 유효하다면 해당 액세스토큰 반환
-        if access_exp and datetime.utcnow().timestamp() <= access_exp:
+        if access_exp and datetime.now(timezone.utc).timestamp() <= access_exp:
             user = await User.get(id=access_id)
             return KakaoOauthResponse(access_token=access_token, id=user.id)
 
@@ -74,7 +73,7 @@ async def get_current_user(
         refresh_user_id = payload.get("id")
 
         # 리프레시 토큰의 만료시간 확인
-        if refresh_exp and datetime.utcnow().timestamp() > refresh_exp:
+        if refresh_exp and datetime.now(timezone.utc).timestamp() > refresh_exp:
             raise HTTPException(status_code=401, detail="Refresh token expired, Please login again")
 
         # 리프레시 토큰이 유효하지 않다면

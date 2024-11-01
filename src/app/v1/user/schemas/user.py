@@ -2,8 +2,6 @@ from datetime import datetime
 
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
 
-from pydantic import BaseModel, Field
-
 # from entity.accounts import BankNum, AccountType
 
 #
