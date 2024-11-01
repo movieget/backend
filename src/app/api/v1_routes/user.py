@@ -1,17 +1,24 @@
 from typing import List
 
-
 from fastapi import APIRouter, Depends, HTTPException, Request, Query, Response
 from fastapi.security import OAuth2PasswordBearer
 
 from src.app.v1.user.entity.user import User
 from src.app.v1.user.repository.user_repository import PointRepository
+from src.app.v1.user.schemas.oauth import KakaoOauthResponse
 from src.app.v1.user.schemas.user import UserResponseSchema, UserUpdateSchema, PointUseResponse, PointStackResponse
+from src.app.v1.user.service.login_kakao import login_kakao_route
 from src.app.v1.user.service.user_service import delete_user_account, get_user_info, logout_user, update_user_info
 from src.core.security import get_current_user
 
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+
+# 카카오 로그인
+@router.get("/login/kakao", response_model=KakaoOauthResponse)
+async def login_kakao(code: str, response: Response):
+    return await login_kakao_route(code, response)
 
 
 # 내 정보 조회
