@@ -1,6 +1,8 @@
 from pydantic import BaseModel as PydanticModel, ConfigDict
 from datetime import date
 
+# from fastapi import UploadFile
+
 
 class ReviewCreateRequest(PydanticModel):
     model_config = ConfigDict(from_attributes=True)
@@ -11,9 +13,10 @@ class ReviewCreateRequest(PydanticModel):
     registration_data: date
 
 
-class ReviewImageRequest(PydanticModel):
-    model_config = ConfigDict(from_attributes=True)
-    review_image_url: str
+# class ReviewImageRequest(PydanticModel):
+#     model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)
+#     user_id: int
+#     image_file: UploadFile
 
 
 class ReviewUpdateRequest(PydanticModel):
