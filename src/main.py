@@ -25,47 +25,46 @@ from src.common.handlers.db_handler import lifespan
 load_dotenv()
 
 
-def setup_opentelemetry():
-    """OpenTelemetry 설정"""
+# def setup_opentelemetry():
+#     """OpenTelemetry 설정"""
 
-    # 리소스 속성 설정
-    resource = Resource.create(
-        {
-            "service.name": os.getenv("OTEL_SERVICE_NAME", "fastapi-service"),
-            "service.version": os.getenv("OTEL_SERVICE_VERSION", "1.0.0"),
-            "deployment.environment": os.getenv("OTEL_DEPLOYMENT_ENVIRONMENT", "development"),
-            "host.name": socket.gethostname(),
-        }
-    )
+#     # 리소스 속성 설정
+#     resource = Resource.create(
+#         {
+#             "service.name": os.getenv("OTEL_SERVICE_NAME", "fastapi-service"),
+#             "service.version": os.getenv("OTEL_SERVICE_VERSION", "1.0.0"),
+#             "host.name": socket.gethostname(),
+#         }
+#     )
 
-    # TracerProvider 설정
-    tracer_provider = TracerProvider(resource=resource)
+#     # TracerProvider 설정
+#     tracer_provider = TracerProvider(resource=resource)
 
-    # Elastic APM OTLP 엔드포인트로 내보내기 설정
-    otlp_exporter = OTLPSpanExporter(
-        endpoint=os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT"),
-        headers=os.getenv("OTEL_EXPORTER_OTLP_HEADERS"),
-    )
-    print(os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT"))
+#     # Elastic APM OTLP 엔드포인트로 내보내기 설정
+#     otlp_exporter = OTLPSpanExporter(
+#         endpoint=os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:8200/v1/traces"),
+#         headers=os.getenv("OTEL_EXPORTER_OTLP_HEADERS"),
+#     )
+#     print(os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT"))
 
-    # BatchSpanProcessor를 TracerProvider에 추가
-    span_processor = BatchSpanProcessor(otlp_exporter)
-    tracer_provider.add_span_processor(span_processor)
+#     # BatchSpanProcessor를 TracerProvider에 추가
+#     span_processor = BatchSpanProcessor(otlp_exporter)
+#     tracer_provider.add_span_processor(span_processor)
 
-    # 글로벌 TracerProvider 설정
-    trace.set_tracer_provider(tracer_provider)
-
-
-# OpenTelemetry 설정 적용
-setup_opentelemetry()
+#     # 글로벌 TracerProvider 설정
+#     trace.set_tracer_provider(tracer_provider)
 
 
-tracemalloc.start()
+# # OpenTelemetry 설정 적용
+# setup_opentelemetry()
+
+
+# tracemalloc.start()
 
 app = FastAPI(lifespan=lifespan, debug=True)
 
-# FastAPI 계측
-FastAPIInstrumentor.instrument_app(app)
+# # FastAPI 계측
+# FastAPIInstrumentor.instrument_app(app)
 
 # NOTE: Turn off in Production
 # app = FastAPI(openapi_url=None)
@@ -76,6 +75,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
+    allow_origin_regex="http://111\.111\.111\.111(:\d+)?",
     allow_methods=["*"],
     allow_headers=["*"],
 )

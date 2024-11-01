@@ -17,8 +17,7 @@ class ReviewsResponse(PydanticModel):
 
 
 class ReviewImageResponse(PydanticModel):
-    model_config = ConfigDict(from_attributes=True)
-    review_image_url: str
+    reviewImage: str = Field(..., alias="review_image_url")
 
 
 class ReviewUpdateResponse(PydanticModel):

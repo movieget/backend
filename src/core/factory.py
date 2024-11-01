@@ -18,5 +18,8 @@ def get_favorite_service(
     return FavoriteService(favorite_repository, user_repository, movie_repository)
 
 
-def get_review_service(review_repository: ReviewRepository = Depends()) -> ReviewService:
-    return ReviewService(review_repository)
+def get_review_service(
+    review_repository: ReviewRepository = Depends(),
+    user_repository: UserRepository = Depends(),
+) -> ReviewService:
+    return ReviewService(review_repository, user_repository)

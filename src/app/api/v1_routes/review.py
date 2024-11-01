@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, UploadFile, File
 from typing import List
 from src.app.v1.review.schemas.responseDto import ReviewsResponse, ReviewImageResponse
-from src.app.v1.review.schemas.resquestDto import ReviewCreateRequest, ReviewUpdateRequest, ReviewImageRequest
+from src.app.v1.review.schemas.resquestDto import ReviewCreateRequest, ReviewUpdateRequest
 from src.app.v1.review.service.review_service import ReviewService
 
 from src.core.factory import get_review_service
@@ -10,22 +10,36 @@ router = APIRouter()
 
 
 @router.get("/reviews/{user_id}", response_model=List[ReviewsResponse])
-async def get_user_reviews(user_id: int, review_service: ReviewService = Depends(get_review_service)):
+async def get_user_reviews(
+    user_id: int,
+    review_service: ReviewService = Depends(get_review_service),
+):
     return await review_service.get_user_reviews_with_user_info(user_id)
 
 
 @router.post("/review/{user_id}", response_model=ReviewsResponse)
-async def create_review(review_request: ReviewCreateRequest, review_service: ReviewService = Depends(get_review_service)):
+async def create_review(
+    review_request: ReviewCreateRequest,
+    review_service: ReviewService = Depends(get_review_service),
+):
     return await review_service.create_review(review_request)
 
 
-@router.post("/review/image", response_model=ReviewImageResponse)
-async def create_review_image(review_request: ReviewImageRequest, review_service: ReviewService = Depends(get_review_service)):
-    return await review_service.upload_review_image(review_request)
+@router.post("/review/image/{user_id}", response_model=ReviewImageResponse)
+async def create_review_image(
+    user_id: int,
+    image_file: UploadFile = File(...),
+    review_service: ReviewService = Depends(get_review_service),
+):
+    return await review_service.upload_review_image(user_id, image_file)
 
 
 @router.patch("/review/{review_id}", response_model=ReviewsResponse)
-async def update_review(review_id: int, review_request: ReviewUpdateRequest, review_service: ReviewService = Depends(get_review_service)):
+async def update_review(
+    review_id: int,
+    review_request: ReviewUpdateRequest,
+    review_service: ReviewService = Depends(get_review_service),
+):
     return await review_service.update_review(review_id, review_request)
 
 
