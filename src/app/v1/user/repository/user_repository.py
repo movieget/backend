@@ -149,3 +149,23 @@ class PointRepository:
 
         logging.info(f"User {user_id} updated with {points_to_add} points. Total: {user.point}")
 
+# 포이트 차감
+    @staticmethod
+    async def deduct_points(user_id: int, points: int) -> None:
+        try:
+            user = await User.get(id=user_id)
+            if user.point < points:
+                raise ValueError("사용 가능한 포인트가 부족합니다.")
+            user.point -= points
+            await user.save()
+        except DoesNotExist:
+            raise ValueError("해당 사용자를 찾을 수 없습니다.")
+
+# 남은 포인트
+    @staticmethod
+    async def get_remaining_points(user_id: int) -> int:
+        try:
+            user = await User.get(id=user_id)
+            return user.point
+        except DoesNotExist:
+            raise ValueError("해당 사용자를 찾을 수 없습니다.")

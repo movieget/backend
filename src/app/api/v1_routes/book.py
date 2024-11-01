@@ -1,10 +1,10 @@
 import logging
 from asyncio import gather
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 from fastapi import APIRouter, HTTPException, Query, Depends
 from datetime import date, time, timedelta, datetime
 
-from src.app.v1.book.schemas.requestDto import BookRequest
+from src.app.v1.book.schemas.requestDto import BookRequest, UsePointsRequest
 from src.app.v1.book.schemas.responseDto import (
     BookOptionsResponse,
     SeatLayoutResponse,
@@ -20,10 +20,9 @@ from src.app.v1.book.schemas.responseDto import (
 from src.app.v1.book.repository.book_repository import BookRepository
 from src.app.v1.screen.entity.screen_info import ScreenInfo
 from src.app.v1.screen.entity.seat import Seat
-from src.app.v1.user.repository.user_repository import UserRepository
+from src.app.v1.user.repository.user_repository import UserRepository, PointRepository
 from src.app.v1.book.schemas.responseDto import BookResponse
 from src.common.models.consts import StatusEnum
-
 from datetime import datetime, timedelta
 
 router = APIRouter()
@@ -149,40 +148,53 @@ async def get_seat_layout(screen_id: int):
 
     return formatted_response
 
-@router.post("/payment/tosspay", response_model=PaymentRedirectResponse)
-async def redirect_to_payment(booking: BookRequest):
-    # 임시 리다이렉트 URL
-    redirect_url = f"https://example-payment.com/checkout?orderId=order-{booking.booking_id}"
+@router.get("/points/{user_id}", response_model=Dict[str, int])
+async def get_user_points(user_id: int):
+    logging.debug(f"Received request for user_id: {user_id}")
+    try:
+        result = await BookRepository.get_user_total_points(user_id)
+        if result is None:
+            logging.error(f"User {user_id} not found")
+            raise HTTPException(status_code=404, detail="유저를 찾을 수 없습니다.")
+        logging.debug(f"Returning result: {result}")
+        return result
+    except Exception as e:
+        logging.error(f"Server error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="서버 에러")
 
-    return PaymentRedirectResponse(book_id=booking.booking_id, redirect_url=redirect_url)
 
+@router.post("/points/use", response_model=Dict[str, Any])
+async def use_points_for_booking(request: UsePointsRequest):
 
-import logging
+    try:
+        await PointRepository.deduct_points(request.user_id, request.total_point)
+        await BookRepository.update_booking_status(request.book_id, StatusEnum.PENDING)
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+        return {
+            "status": "진행중",
+            "remaining_points": await PointRepository.get_remaining_points(request.user_id),
+            "message": "포인트가 임시로 차감되었으며, 결제 진행 중입니다."
+        }
+    except Exception as e:
+        logging.error(f"Error during point usage: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="포인트 사용 처리 중 오류가 발생했습니다.")
 
 
 @router.get("/completed/", response_model=List[CompletedBookingResponse])
 async def get_completed_bookings(user_id: int = Query(..., description="조회할 사용자의 ID")):
-    logger.info(f"Fetching completed bookings for user_id: {user_id}")
+
     completed_bookings = await BookRepository.get_completed_bookings_by_user(user_id)
 
     if not completed_bookings:
-        logger.info(f"No completed bookings found for user_id: {user_id}")
         raise HTTPException(status_code=404, detail="완료된 예약을 찾을 수 없습니다.")
-
-    logger.info(f"Found {len(completed_bookings)} completed bookings for user_id: {user_id}")
     return completed_bookings
 
 
 @router.get("/canceled/", response_model=List[CancelledBookingResponse])
 async def get_canceled_bookings(user_id: int = Query(..., description="조회할 사용자의 ID")):
-    logger.info(f"Fetching canceled bookings for user_id: {user_id}")
+
     canceled_bookings = await BookRepository.get_canceled_bookings_by_user(user_id)
 
     if not canceled_bookings:
-        logger.info(f"No canceled bookings found for user_id: {user_id}")
         raise HTTPException(status_code=404, detail="취소된 예약을 찾을 수 없습니다.")
-    logger.info(f"Found {len(canceled_bookings)} canceled bookings for user_id: {user_id}")
     return canceled_bookings

@@ -30,5 +30,32 @@ async def payment_confirm(paymentrequest: PaymentRequest, payment_service: Payme
     try:
         logger.debug(paymentrequest)
         return await payment_service.confirm_payment(paymentrequest)
+
     except Exception as e:
         raise BusinessException(ErrorCode.INVALID_INPUT_VALUE, detail=str(e))
+
+    # try:
+    #     payment_success = await payment_service.confirm_payment(paymentrequest)
+    #
+    #     if payment_success:
+    #         await PointService.confirm_point_deduction(paymentrequest.user_id)
+    #         await BookingService.update_booking_status(paymentrequest.book_id, StatusEnum.COMPLETED)
+    #
+    #         return {
+    #             "status": "완료",
+    #             "message": "결제가 성공적으로 완료되었습니다.",
+    #             "remaining_points": remaining_points,
+    #             **paymentrequest.dict()
+    #         }
+    #     else:
+    #         # 결제 실패 처리
+    #         await PointService.restore_points(paymentrequest.user_id)
+    #         await BookingService.update_booking_status(paymentrequest.book_id, StatusEnum.CANCELLED)
+    #
+    #         return {
+    #             "status": "취소",
+    #             "message": "결제가 실패했습니다. 포인트가 복구되었습니다.",
+    #             **paymentrequest.dict()  # 결제 요청 데이터를 포함
+    #         }
+    # except Exception as e:
+    #     raise BusinessException(ErrorCode.INVALID_INPUT_VALUE, detail=str(e))
