@@ -59,11 +59,22 @@ load_dotenv()
 # setup_opentelemetry()
 
 
-# tracemalloc.start()
+tracemalloc.start()
 
 app = FastAPI(lifespan=lifespan, debug=True)
 
-# # FastAPI 계측
+# # 트레이서 프로바이더 설정
+# trace.set_tracer_provider(TracerProvider())
+# tracer = trace.get_tracer(__name__)
+
+# # OTLP 익스포터 설정 (APM 서버의 엔드포인트를 지정)
+# otlp_exporter = OTLPSpanExporter(endpoint="https://apm.kprolabs.space")
+
+# # 배치 스팬 프로세서를 사용하여 스팬을 배치로 내보내기 설정
+# span_processor = BatchSpanProcessor(otlp_exporter)
+# trace.get_tracer_provider().add_span_processor(span_processor)
+
+# # FastAPI 앱 계측
 # FastAPIInstrumentor.instrument_app(app)
 
 # NOTE: Turn off in Production

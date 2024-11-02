@@ -1,5 +1,5 @@
 from pydantic import BaseModel as PydanticModel, ConfigDict, Field
-from datetime import datetime
+from datetime import date
 
 
 # NOTE: 전체 Review로 List 형태로 전달
@@ -7,13 +7,24 @@ from datetime import datetime
 class ReviewsResponse(PydanticModel):
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
     id: int
-    userProfile: str = Field(..., alias="image_url")
-    userId: str = Field(..., alias="username")
-    score: int = Field(..., alias="rating")
+    image_url: str | None = Field(..., alias="userProfile")
+    username: str = Field(..., alias="userId")
+    rating: int = Field(..., alias="score")
     title: str
-    content: str = Field(..., alias="contents")
-    reviewImage: str = Field(..., alias="review_image_url")
-    creationDate: datetime = Field(..., alias="registration_date")
+    contents: str = Field(..., alias="content")
+    review_image_url: str | None = Field(..., alias="reviewImage")
+    registration_date: date = Field(..., alias="creationDate")
+
+
+class ReviewCreateResponse(PydanticModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    user_id: int
+    title: str
+    contents: str = Field(..., alias="content")
+    rating: int = Field(..., alias="score")
+    review_image_url: str | None = Field(..., alias="reviewImage")
+    registration_date: date = Field(..., alias="creationDate")
 
 
 class ReviewImageResponse(PydanticModel):
