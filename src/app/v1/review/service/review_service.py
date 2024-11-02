@@ -59,21 +59,30 @@ class ReviewService:
             contents=review_request.contents,
             review_image_url=review_request.review_image_url,
             rating=review_request.rating,
-            user_id=review_request.user_id,
+            user_id=user.id,
             movie_id=movie_id,
         )
+        print("======================================\n")
+        print(review)
+        print("======================================\n")
 
-        await self.review_repository.create_review(review)
+        after_review = await self.review_repository.create_review(review)
+
+        print("등록 날짜:", after_review.registration_date)
+
+        print("======================================\n")
+        print(after_review)
+        print("======================================\n")
 
         # ReviewCreateResponse로 변환하여 반환
         return ReviewCreateResponse(
-            id=review.id,
-            user_id=review.user_id,  # 사용자 이름
-            rating=review.rating.value,  # 평점 (Enum에서 값 가져오기)
-            title=review.title,
-            contents=review.contents,
-            review_image_url=review.review_image_url,
-            # registration_date=review.registration_date,
+            id=after_review.id,
+            rating=after_review.rating.value,  # 평점 (Enum에서 값 가져오기)
+            title=after_review.title,
+            contents=after_review.contents,
+            review_image_url=after_review.review_image_url,
+            registration_date=after_review.registration_date,
+            user_id=user.id,  # 사용자 이름
         )
 
     async def upload_review_image(self, user_id, image_file) -> Dict:

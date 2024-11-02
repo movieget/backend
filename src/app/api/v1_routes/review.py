@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, UploadFile, File, Query
 from typing import List
-from src.app.v1.review.schemas.responseDto import ReviewsResponse, ReviewImageResponse
+from src.app.v1.review.schemas.responseDto import ReviewsResponse, ReviewImageResponse, ReviewCreateResponse
 from src.app.v1.review.schemas.resquestDto import ReviewCreateRequest, ReviewUpdateRequest
 from src.app.v1.review.service.review_service import ReviewService
 
@@ -17,12 +17,15 @@ async def get_all_reviews(
     return await review_service.get_movie_reviews(movie_id)
 
 
-@router.post("/review/{movie_id}", response_model=ReviewsResponse)
+@router.post("/review/{movie_id}", response_model=ReviewCreateResponse)
 async def create_review(
     movie_id: int,
     review_request: ReviewCreateRequest,
     review_service: ReviewService = Depends(get_review_service),
 ):
+    print("======================================\n")
+    print("통과")
+    print("======================================\n")
     return await review_service.create_review(movie_id, review_request)
 
 
