@@ -6,11 +6,12 @@ from datetime import date
 
 class ReviewCreateRequest(PydanticModel):
     model_config = ConfigDict(from_attributes=True)
+    user_id: int
     title: str
     contents: str
-    review_image_url: str | None
     rating: int
-    user_id: int
+    review_image_url: str | None
+    registration_date: date
 
 
 # class ReviewImageRequest(PydanticModel):
