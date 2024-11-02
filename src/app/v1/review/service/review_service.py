@@ -1,69 +1,81 @@
-from fastapi import File
 import uuid, urllib.parse
 from botocore.exceptions import BotoCoreError, ClientError
 import os
 from dotenv import load_dotenv
 from typing import List, Dict
 from src.common.utils.aws_s3 import s3_client
-from src.app.v1.review.entity.review import Review
 from src.common.handlers.exception_handler import BusinessException, ErrorCode
+from src.app.v1.review.entity.review import Review
 from src.app.v1.review.repository.review_repository import ReviewRepository
+from src.app.v1.movie.repository.movie_repository import MovieRepository
 from src.app.v1.user.repository.user_repository import UserRepository
 from src.app.v1.review.schemas.resquestDto import ReviewCreateRequest, ReviewUpdateRequest
-from src.app.v1.review.schemas.responseDto import ReviewImageResponse
+from src.app.v1.review.schemas.responseDto import ReviewImageResponse, ReviewsResponse, ReviewCreateResponse
 
 load_dotenv()
 
 
 class ReviewService:
 
-    def __init__(self, review_repository: ReviewRepository, user_repository: UserRepository):
+    def __init__(self, review_repository: ReviewRepository, movie_repository: MovieRepository, user_repository: UserRepository):
         self.review_repository = review_repository
+        self.movie_repository = movie_repository
         self.user_repository = user_repository
 
-    async def get_user_reviews_with_user_info(self, user_id: int) -> List[Review]:
-        """특정 사용자의 모든 리뷰를 가져옵니다."""
-        # 사용자 조회
-        user = await self.user_repository.get_user(user_id)
-        if not user:
-            raise BusinessException(ErrorCode.USER_NOT_FOUND, f"사용자 {user_id}번 ID를 찾을 수 없습니다.")
-
-        # 사용자의 리뷰 조회
-        reviews = await self.review_repository.get_reviews_by_user_id(user_id)
-
-        # 리뷰가 없는 경우 처리
+    async def get_movie_reviews(self, movie_id: int) -> List[ReviewsResponse]:
+        # Movie가 존재하는 지 조회
+        reviews = await self.review_repository.get_reviews_by_movie_id(movie_id)
         if not reviews:
-            raise BusinessException(ErrorCode.REVIEW_NOT_FOUND, f"사용자 {user_id}번 ID에 대한 리뷰가 없습니다.")
+            raise BusinessException(ErrorCode.MOVIE_NOT_FOUND, f"조회한 {movie_id}가 존재하지 않습니다.")
 
+        # ReviewsResponse로 변환하여 반환
         return [
-            {
-                "id": review.id,
-                "title": review.title,
-                "contents": review.contents,
-                "review_image_url": review.review_image_url,
-                "rating": review.rating,
-                "registration_date": review.registration_date,
-                "username": review.user.username,
-                "user_image_url": review.user.image_url,
-            }
+            ReviewsResponse(
+                id=review.id,
+                image_url=review.user.image_url,
+                username=review.user.username,
+                rating=review.rating.value,  # Assuming rating is an Enum
+                title=review.title,
+                contents=review.contents,
+                review_image_url=review.review_image_url,
+                registration_date=review.registration_date,
+            )
             for review in reviews
         ]
 
-    async def create_review(self, review_request: ReviewCreateRequest) -> Review:
+    async def create_review(self, movie_id: int, review_request: ReviewCreateRequest) -> ReviewCreateResponse:
         """새로운 리뷰를 생성합니다."""
+        # 영화 조회
+        movie = await self.movie_repository.get_movie(movie_id)
+        if not movie:
+            raise BusinessException(ErrorCode.MOVIE_NOT_FOUND, f"영화 {movie_id}번 ID를 찾을 수 없습니다.")
         # 사용자 조회
-        user = await self.user_repository.get_user(ReviewCreateRequest.user_id)
+        user = await self.user_repository.get_user(review_request.user_id)
         if not user:
-            raise BusinessException(ErrorCode.USER_NOT_FOUND, f"사용자 {ReviewCreateRequest.user_id}번 ID를 찾을 수 없습니다.")
-        return await self.review_repository.create_review(
-            user_id=review_request.user_id,
+            raise BusinessException(ErrorCode.USER_NOT_FOUND, f"사용자 {review_request.user_id}번 ID를 찾을 수 없습니다.")
+
+        review = Review(
             title=review_request.title,
             contents=review_request.contents,
             review_image_url=review_request.review_image_url,
             rating=review_request.rating,
+            user_id=review_request.user_id,
+            movie_id=movie_id,
         )
 
-    # TODO: review_image_url은 다른 upload_handler를 불러 처리해야 됨.
+        await self.review_repository.create_review(review)
+
+        # ReviewCreateResponse로 변환하여 반환
+        return ReviewCreateResponse(
+            id=review.id,
+            user_id=review.user_id,  # 사용자 이름
+            rating=review.rating.value,  # 평점 (Enum에서 값 가져오기)
+            title=review.title,
+            contents=review.contents,
+            review_image_url=review.review_image_url,
+            # registration_date=review.registration_date,
+        )
+
     async def upload_review_image(self, user_id, image_file) -> Dict:
         # 사용자 확인
         user = await self.user_repository.get_user(user_id)

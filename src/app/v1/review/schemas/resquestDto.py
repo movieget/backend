@@ -10,7 +10,7 @@ class ReviewCreateRequest(PydanticModel):
     title: str
     contents: str
     rating: int
-    registration_data: date
+    review_image_url: str | None
 
 
 # class ReviewImageRequest(PydanticModel):

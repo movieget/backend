@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, UploadFile, File
+from fastapi import APIRouter, Depends, UploadFile, File, Query
 from typing import List
 from src.app.v1.review.schemas.responseDto import ReviewsResponse, ReviewImageResponse
 from src.app.v1.review.schemas.resquestDto import ReviewCreateRequest, ReviewUpdateRequest
@@ -9,20 +9,21 @@ from src.core.factory import get_review_service
 router = APIRouter()
 
 
-@router.get("/reviews/{user_id}", response_model=List[ReviewsResponse])
-async def get_user_reviews(
-    user_id: int,
+@router.get("/reviews", response_model=List[ReviewsResponse])
+async def get_all_reviews(
+    movie_id: int = Query(...),
     review_service: ReviewService = Depends(get_review_service),
 ):
-    return await review_service.get_user_reviews_with_user_info(user_id)
+    return await review_service.get_movie_reviews(movie_id)
 
 
-@router.post("/review/{user_id}", response_model=ReviewsResponse)
+@router.post("/review/{movie_id}", response_model=ReviewsResponse)
 async def create_review(
+    movie_id: int,
     review_request: ReviewCreateRequest,
     review_service: ReviewService = Depends(get_review_service),
 ):
-    return await review_service.create_review(review_request)
+    return await review_service.create_review(movie_id, review_request)
 
 
 @router.post("/review/image/{user_id}", response_model=ReviewImageResponse)
