@@ -17,7 +17,7 @@ class ReviewsResponse(PydanticModel):
 
 
 class ReviewCreateResponse(PydanticModel):
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
     id: int
     user_id: int
     title: str
