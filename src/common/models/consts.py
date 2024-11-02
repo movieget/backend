@@ -25,7 +25,7 @@ class RatingEnum(str, Enum):
 
 
 class StatusEnum(str, Enum):
-    PENDING = "진행 중"  # 또는 대기 중
+    PENDING = "진행중"  # 또는 대기 중
     COMPLETED = "완료"
     CANCELLED = "취소"
 

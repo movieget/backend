@@ -13,6 +13,8 @@ from src.app.v1.book.schemas.requestDto import BookRequest
 from typing import List, Dict
 import logging
 
+from src.app.v1.user.entity.user import User
+from src.app.v1.user.repository.user_repository import PointRepository
 from src.common.models.consts import StatusEnum
 
 from datetime import datetime, date, time
@@ -64,62 +66,6 @@ class BookRepository:
         # 예약 생성 로직
         new_user_booking = await Book.create(user_id=user_id, status=status, screen_info_id=screen_info_id)
         return new_user_booking
-
-    # @staticmethod
-    # async def create_new_booking(user_id: int = None, status: str = "pending", screen_info_id: int = None) -> Book:
-    #     if screen_info_id is None:
-    #         logging.error("screen_info_id is required but was not provided.")
-    #         raise HTTPException(status_code=400, detail="screen_info_id is required to create a booking.")
-    #
-    #     logging.info(
-    #         f"Creating a new booking with user_id: {user_id}, screen_info_id: {screen_info_id}, and status: {status}")
-    #     new_booking = await Book.create(user_id=user_id, screen_info_id=screen_info_id, status=status)
-    #     logging.info(f"New booking created with ID: {new_booking.id}")
-    #     return new_booking
-    # @staticmethod
-    # async def get_movies_by_date(screening_date: date) -> List[Movie]:
-    #     logging.info(f"Fetching movies for screening date: {screening_date}")
-    #     movies = await Movie.filter(screen_infos__screening_date=screening_date).distinct().values(
-    #         "id", "title", "genre", "duration", "age_rating", "poster_image_url"
-    #     )
-    #     if not movies:
-    #         logging.warning(f"No movies found for screening date: {screening_date}")
-    #         raise HTTPException(status_code=404, detail="해당 날짜에 상영하는 영화를 찾을 수 없습니다.")
-    #     return movies
-    #
-    # @staticmethod
-    # async def get_locations_by_movie(movie_id: int) -> List[Location]:
-    #     logging.info(f"Fetching locations for movie_id: {movie_id}")
-    #     # `Location`과 `Cinema`, `Screen`, `ScreenInfo` 간의 관계를 기반으로 올바른 경로 설정
-    #     locations = await Location.filter(
-    #         cinemas__screens__screen_infos__movie_id=movie_id  # 관계 설정을 다시 확인하고 수정
-    #     ).distinct().values("id", "spot")
-    #
-    #     if not locations:
-    #         logging.warning(f"No locations found for movie_id: {movie_id}")
-    #         raise HTTPException(status_code=404, detail="선택한 영화를 상영하는 지역이 없습니다.")
-    #     logging.info(f"Found locations: {locations}")
-    #     return locations
-    #
-    # @staticmethod
-    # async def get_cinemas_by_location(location_id: int) -> List[Cinema]:
-    #     logging.info(f"Fetching cinemas for location_id: {location_id}")
-    #     cinemas = await Cinema.filter(location_id=location_id).values("id", "cinema_name")
-    #     if not cinemas:
-    #         logging.warning(f"No cinemas found for location_id: {location_id}")
-    #         raise HTTPException(status_code=404, detail="해당 지역에 영화관이 없습니다.")
-    #     return cinemas
-    #
-    # @staticmethod
-    # async def get_screenings_by_cinema_and_movie(cinema_id: int, movie_id: int) -> List[ScreenInfo]:
-    #     logging.info(f"Fetching screenings for cinema_id: {cinema_id}, movie_id: {movie_id}")
-    #     screenings = await ScreenInfo.filter(screen__cinema_id=cinema_id, movie_id=movie_id).values(
-    #         "id", "screening_date", "start_time", "end_time", "screen_id"
-    #     )
-    #     if not screenings:
-    #         logging.warning(f"No screenings found for cinema_id: {cinema_id}, movie_id: {movie_id}")
-    #         raise HTTPException(status_code=404, detail="상영 정보가 존재하지 않습니다.")
-    #     return screenings
 
     @staticmethod
     async def get_bookings_by_user_and_status(user_id: int, status: str) -> List[Book]:
@@ -291,3 +237,28 @@ class BookRepository:
             return booking
         except DoesNotExist:
             raise HTTPException(status_code=404, detail="예매 정보를 찾을 수 없습니다.")
+
+
+    @staticmethod
+    async def get_user_total_points(user_id: int) -> Dict[str, int]:
+        logging.debug(f"Fetching total points for user_id: {user_id}")
+        try:
+            user = await User.get(id=user_id)
+            logging.debug(f"User found: {user.id}, points: {user.point}")
+            return {"user_id": user.id, "available_points": user.point}
+        except DoesNotExist:
+            logging.error(f"User {user_id} does not exist.")
+            return None
+        except Exception as e:
+            logging.error(f"Error fetching total points for user {user_id}: {e}", exc_info=True)
+            return None
+
+
+    @staticmethod
+    async def update_booking_status(book_id: int, status: str) -> None:
+        try:
+            booking = await Book.get(id=book_id)
+            booking.status = status
+            await booking.save()
+        except DoesNotExist:
+            raise ValueError("해당 예매 정보를 찾을 수 없습니다.")

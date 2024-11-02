@@ -26,3 +26,9 @@ class BookRequest(BaseModel):
 class SeatSelectionRequest(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     selected_seat_ids: List[str]
+
+class UsePointsRequest(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    user_id: int
+    book_id: int
+    total_point: int
