@@ -1,10 +1,10 @@
-from datetime import date, datetime, time
+from datetime import date, time
 
-from pydantic import BaseModel, ConfigDict
-from typing import List, Optional, Literal
+from pydantic import BaseModel as PydanticModel, ConfigDict
+from typing import List, Literal
 
 
-class MovieOption(BaseModel):
+class MovieOption(PydanticModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
     title: str
@@ -14,19 +14,19 @@ class MovieOption(BaseModel):
     poster_image_url: str
 
 
-class LocationOption(BaseModel):
+class LocationOption(PydanticModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
     spot: str
 
 
-class CinemaOption(BaseModel):
+class CinemaOption(PydanticModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
     cinema_name: str
 
 
-class ScreeningOption(BaseModel):
+class ScreeningOption(PydanticModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
     screening_date: date
@@ -35,7 +35,7 @@ class ScreeningOption(BaseModel):
     screen_id: int
 
 
-class BookOptionsResponse(BaseModel):
+class BookOptionsResponse(PydanticModel):
     model_config = ConfigDict(from_attributes=True)
     book_id: int | None
     movies: List[MovieOption]
@@ -44,36 +44,31 @@ class BookOptionsResponse(BaseModel):
     screenings: List[ScreeningOption]
 
 
-class UpdateResponse(BaseModel):
+class UpdateResponse(PydanticModel):
     model_config = ConfigDict(from_attributes=True)
     booking_id: int  # 업데이트된 예약 ID
     status: str  # 업데이트된 상태 (예: "COMPLETED", "CANCELED")
-    message: str = "예약 상태가 성공적으로 업데이트되었습니다."  # 상태 업데이트에 대한 메시지 기본 값 설정
+    message: str = "예약 상태가 성공적으로 업데이트되었습니다."  # 상태 업데이트에 대한 메시지 기본 값 설정=
 
 
-# class SeatResponse(BaseModel):
-#     model_config = ConfigDict(from_attributes=True)
-#     is_selected: bool
-
-
-class SeatInfo(BaseModel):
+class SeatInfo(PydanticModel):
     column: str | None
     status: bool | None
 
 
-class RowInfo(BaseModel):
+class RowInfo(PydanticModel):
     model_config = ConfigDict(from_attributes=True)
     row: str
     seats: List[SeatInfo]
 
 
-class SeatLayoutResponse(BaseModel):
+class SeatLayoutResponse(PydanticModel):
     model_config = ConfigDict(from_attributes=True)
     screen_id: int
     rows: List[RowInfo]
 
 
-class MovieScreeningInfoResponse(BaseModel):
+class MovieScreeningInfoResponse(PydanticModel):
     model_config = ConfigDict(from_attributes=True)
     movie_title: str
     movie_poster: str  # s3 url
@@ -87,7 +82,7 @@ class MovieScreeningInfoResponse(BaseModel):
     total_price: int | None = None
 
 
-class PriceResponse(BaseModel):
+class PriceResponse(PydanticModel):
     model_config = ConfigDict(from_attributes=True)
     adult_count: int  # 성인 수
     child_count: int  # 청소년 수
@@ -98,7 +93,7 @@ class PriceResponse(BaseModel):
 # 예매 응답
 
 
-class BookResponse(BaseModel):
+class BookResponse(PydanticModel):
     model_config = ConfigDict(from_attributes=True)
     poster_url: str  # 포스터 URL
     movie_info: str  # 영화 이름 및 연령 제한 (예: "영화이름, 12세 이상")
@@ -112,12 +107,12 @@ class BookResponse(BaseModel):
     cinema: str  # 상영관 정보
 
 
-class PaymentRedirectResponse(BaseModel):
+class PaymentRedirectResponse(PydanticModel):
     book_id: int
     redirect_url: str
 
 
-class CompletedBookingResponse(BaseModel):
+class CompletedBookingResponse(PydanticModel):
     booking_id: int
     poster_url: str
     title: str
@@ -135,7 +130,7 @@ class CompletedBookingResponse(BaseModel):
     screen_number: int
 
 
-class CancelledBookingResponse(BaseModel):
+class CancelledBookingResponse(PydanticModel):
     booking_id: int
     poster_url: str
     title: str
@@ -151,3 +146,13 @@ class CancelledBookingResponse(BaseModel):
     spot: str
     cinema_name: str
     screen_number: int
+
+
+class SuccessBookingResponse(PydanticModel):
+    book_id: str
+    message: str
+
+
+class FailBookingResponse(PydanticModel):
+    book_id: str
+    message: str

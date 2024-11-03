@@ -1,23 +1,21 @@
 from datetime import date, datetime
 from tortoise.exceptions import DoesNotExist
 from fastapi import HTTPException
-
+from src.common.handlers.exception_handler import BusinessException, ErrorCode
+from src.app.v1.book.entity.bookseat import BookSeat
 from src.app.v1.book.entity import book
 from src.app.v1.book.entity.book import Book
-from src.app.v1.movie.entity.movie import Movie
-from src.app.v1.cinema.entity.cinema import Cinema
 from src.app.v1.screen.entity.screen_info import ScreenInfo
 from src.app.v1.screen.entity.seat import Seat
-from src.app.v1.location.entity.location import Location
-from src.app.v1.book.schemas.requestDto import BookRequest
 from typing import List, Dict
-import logging
-
+import logging, re
 from src.app.v1.user.entity.user import User
 from src.app.v1.user.repository.user_repository import PointRepository
 from src.common.models.consts import StatusEnum
 
-from datetime import datetime, date, time
+from datetime import datetime, date
+
+logger = logging.getLogger(__name__)
 
 
 class BookRepository:
@@ -77,27 +75,6 @@ class BookRepository:
         )
         logging.info(f"Found {len(bookings)} bookings for user_id: {user_id} with status: {status}")
         return bookings
-
-    # 예약 생성
-    @staticmethod
-    async def create_booking(booking_data: BookRequest, user_id: int) -> Book:
-        logging.info(f"Creating booking for user_id: {user_id} with data: {booking_data}")
-        try:
-            await Movie.get(id=booking_data.movie_id)
-            await Cinema.get(id=booking_data.cinema_id)
-            await ScreenInfo.get(id=booking_data.screen_info_id)
-        except DoesNotExist as e:
-            logging.error(f"Invalid movie, cinema, or screen info data: {e}")
-            raise HTTPException(status_code=404, detail="유효하지 않은 영화, 영화관 또는 상영 정보입니다.")
-
-        # Book 인스턴스 생성
-        new_booking = await Book.create(user_id=user_id, screen_info_id=booking_data.screen_info_id, status="pending")
-        logging.info(f"New booking created with ID: {new_booking.id}")
-
-        points_earned = (booking_data.adult_count + booking_data.child_count) * 100
-        await PointRepository.update_points(user_id, points_earned)
-
-        return new_booking
 
     @staticmethod
     async def get_completed_bookings_by_user(user_id: int) -> List[dict]:
@@ -238,7 +215,6 @@ class BookRepository:
         except DoesNotExist:
             raise HTTPException(status_code=404, detail="예매 정보를 찾을 수 없습니다.")
 
-
     @staticmethod
     async def get_user_total_points(user_id: int) -> Dict[str, int]:
         logging.debug(f"Fetching total points for user_id: {user_id}")
@@ -253,6 +229,16 @@ class BookRepository:
             logging.error(f"Error fetching total points for user {user_id}: {e}", exc_info=True)
             return None
 
+    @staticmethod
+    async def update_book(self, book_id: str, status: str, adult_count: int = None, child_count: int = None) -> Book:
+        book = await Book.get(id=book_id)
+        book.status = status
+        if adult_count is not None:
+            book.adult_count = adult_count
+        if child_count is not None:
+            book.child_count = child_count
+        await book.save()
+        return book
 
     @staticmethod
     async def update_booking_status(book_id: int, status: str) -> None:
@@ -262,3 +248,33 @@ class BookRepository:
             await booking.save()
         except DoesNotExist:
             raise ValueError("해당 예매 정보를 찾을 수 없습니다.")
+
+    @staticmethod
+    async def get_seat_ids_by_screen(self, screen_id: int, seat_numbers: List[str]) -> List[int]:
+        seat_ids = []
+
+        for seat_number in seat_numbers:
+            match = re.match(r"([A-Z])(\d+)", seat_number)
+            if not match:
+                raise ValueError(f"Invalid seat format: {seat_number}")
+
+            row = match.group(1)
+            column = int(match.group(2))
+
+            try:
+                # 좌석을 조회하여 ID를 가져옴
+                seat = await Seat.get(screen_id=screen_id, row=row, column=column)
+                seat_ids.append(seat.id)  # 좌석 ID만 추가
+            except DoesNotExist:
+                raise ValueError(f"Seat {seat_number} does not exist for screen {screen_id}")
+
+        return seat_ids
+
+    # @staticmethod
+    # async def update_book(self, book_id: int, status: str, adult_count: int, child_count: int) -> Book:
+    #     book = await Book.get(id=book_id)
+    #     book.status = status
+    #     book.adult_count = adult_count
+    #     book.child_count = child_count
+    #     await book.save()
+    #     return book

@@ -1,6 +1,6 @@
 from tortoise import fields, models
 from src.common.models.base_model import BaseModel
-from src.common.models.consts import MoviePriceEnum, StatusEnum
+from src.common.models.consts import StatusEnum
 
 
 class Book(BaseModel, models.Model):
@@ -12,9 +12,13 @@ class Book(BaseModel, models.Model):
     child_count = fields.IntField(default=0)
     user = fields.ForeignKeyField("models.User", related_name="books", on_delete=fields.CASCADE, null=True)
     screen_info = fields.ForeignKeyField("models.ScreenInfo", related_name="books", on_delete=fields.CASCADE, null=True)  # null 허용
+    seats = fields.ManyToManyField("models.Seat", through="book_seat", related_name="books")
 
     class Meta:
         table = "book"
+
+    def __str__(self):
+        return f"Book {self.id} for User {self.user_id} at {self.book_time}"
 
     @property
     def movie_price(self) -> int:
