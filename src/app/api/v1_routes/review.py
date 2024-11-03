@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, UploadFile, File, Query
-from typing import List
-from src.app.v1.review.schemas.responseDto import ReviewsResponse, ReviewImageResponse, ReviewCreateResponse
+from src.app.v1.review.schemas.responseDto import ReviewsResponse, ReviewImageResponse, ReviewCreateResponse, ReviewListResponse
 from src.app.v1.review.schemas.resquestDto import ReviewCreateRequest, ReviewUpdateRequest
 from src.app.v1.review.service.review_service import ReviewService
 
@@ -9,12 +8,14 @@ from src.core.factory import get_review_service
 router = APIRouter()
 
 
-@router.get("/reviews", response_model=List[ReviewsResponse])
+@router.get("/reviews", response_model=ReviewListResponse)
 async def get_all_reviews(
     movie_id: int = Query(...),
+    page: int = Query(1, ge=1),
+    limit: int = Query(10, ge=1, le=100),
     review_service: ReviewService = Depends(get_review_service),
 ):
-    return await review_service.get_movie_reviews(movie_id)
+    return await review_service.get_movie_reviews_pagination(movie_id, page, limit)
 
 
 @router.post("/review/{movie_id}", response_model=ReviewCreateResponse)
@@ -23,9 +24,6 @@ async def create_review(
     review_request: ReviewCreateRequest,
     review_service: ReviewService = Depends(get_review_service),
 ):
-    print("======================================\n")
-    print("통과")
-    print("======================================\n")
     return await review_service.create_review(movie_id, review_request)
 
 
