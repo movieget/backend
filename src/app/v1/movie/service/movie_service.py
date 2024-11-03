@@ -3,7 +3,7 @@ from src.app.v1.favorite.entity.favorite import Favorite
 from src.common.utils.redis import get_redis
 import json
 
-CACHE_EXPIRE_TIME = 3600  # 1시간
+CACHE_EXPIRE_TIME = 5  # 5초
 
 
 async def get_total_likes(movie_id: int, redis=Depends(get_redis)) -> int:
