@@ -230,13 +230,13 @@ class BookRepository:
             return None
 
     @staticmethod
-    async def update_book(self, book_id: str, status: str, adult_count: int = None, child_count: int = None) -> Book:
+    async def update_book(book_id: str, status: str, adult_count: int, child_count: int, user_id: int, screen_info_id: int) -> Book:
         book = await Book.get(id=book_id)
         book.status = status
-        if adult_count is not None:
-            book.adult_count = adult_count
-        if child_count is not None:
-            book.child_count = child_count
+        book.adult_count = adult_count
+        book.child_count = child_count
+        book.user_id = user_id  # 사용자 ID 추가
+        book.screen_info_id = screen_info_id  # 스크린 정보 ID 추가
         await book.save()
         return book
 
@@ -250,7 +250,7 @@ class BookRepository:
             raise ValueError("해당 예매 정보를 찾을 수 없습니다.")
 
     @staticmethod
-    async def get_seat_ids_by_screen(self, screen_id: int, seat_numbers: List[str]) -> List[int]:
+    async def get_seat_ids_by_screen(screen_id: int, seat_numbers: List[str]) -> List[int]:
         seat_ids = []
 
         for seat_number in seat_numbers:
@@ -269,12 +269,3 @@ class BookRepository:
                 raise ValueError(f"Seat {seat_number} does not exist for screen {screen_id}")
 
         return seat_ids
-
-    # @staticmethod
-    # async def update_book(self, book_id: int, status: str, adult_count: int, child_count: int) -> Book:
-    #     book = await Book.get(id=book_id)
-    #     book.status = status
-    #     book.adult_count = adult_count
-    #     book.child_count = child_count
-    #     await book.save()
-    #     return book
