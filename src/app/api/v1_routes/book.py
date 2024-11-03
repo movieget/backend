@@ -1,10 +1,9 @@
 import logging
-from asyncio import gather
-from typing import List, Dict, Optional, Any
+from typing import List, Dict, Any
 from fastapi import APIRouter, HTTPException, Query, Depends
-from datetime import date, time, timedelta, datetime
+from datetime import date, timedelta, datetime
 
-from src.app.v1.book.schemas.requestDto import BookRequest, UsePointsRequest
+from src.app.v1.book.schemas.requestDto import UsePointsRequest, SuccessBookingRequest, FailBookingRequest
 from src.app.v1.book.schemas.responseDto import (
     BookOptionsResponse,
     SeatLayoutResponse,
@@ -12,7 +11,8 @@ from src.app.v1.book.schemas.responseDto import (
     LocationOption,
     CinemaOption,
     ScreeningOption,
-    PaymentRedirectResponse,
+    SuccessBookingResponse,
+    FailBookingResponse,
     CompletedBookingResponse,
     CancelledBookingResponse,
 )
@@ -21,9 +21,9 @@ from src.app.v1.book.repository.book_repository import BookRepository
 from src.app.v1.screen.entity.screen_info import ScreenInfo
 from src.app.v1.screen.entity.seat import Seat
 from src.app.v1.user.repository.user_repository import UserRepository, PointRepository
-from src.app.v1.book.schemas.responseDto import BookResponse
+from src.app.v1.book.service.book_service import BookService
 from src.common.models.consts import StatusEnum
-from datetime import datetime, timedelta
+from src.core.factory import get_book_service
 
 router = APIRouter()
 
@@ -128,7 +128,7 @@ async def get_seat_layout(screen_id: int):
         # 좌석 정보를 해당 열 위치에 삽입
         seat_layout[row_label][seat.column - 1] = {
             "column": str(seat.column),
-            "status": not bool(seat.is_selected) if seat.is_selected is not None else None
+            "status": not bool(seat.is_selected) if seat.is_selected is not None else None,
         }
 
     # 포맷팅된 응답 구성
@@ -137,16 +137,14 @@ async def get_seat_layout(screen_id: int):
         "rows": [
             {
                 "row": row,
-                "seats": [
-                    seat if seat is not None else {"column": str(index + 1), "status": None}
-                    for index, seat in enumerate(seat_layout[row])
-                ]
+                "seats": [seat if seat is not None else {"column": str(index + 1), "status": None} for index, seat in enumerate(seat_layout[row])],
             }
             for row in sorted(seat_layout.keys())
-        ]
+        ],
     }
 
     return formatted_response
+
 
 @router.get("/points/{user_id}", response_model=Dict[str, int])
 async def get_user_points(user_id: int):
@@ -173,7 +171,7 @@ async def use_points_for_booking(request: UsePointsRequest):
         return {
             "status": "진행중",
             "remaining_points": await PointRepository.get_remaining_points(request.user_id),
-            "message": "포인트가 임시로 차감되었으며, 결제 진행 중입니다."
+            "message": "포인트가 임시로 차감되었으며, 결제 진행 중입니다.",
         }
     except Exception as e:
         logging.error(f"Error during point usage: {e}", exc_info=True)
@@ -198,3 +196,13 @@ async def get_canceled_bookings(user_id: int = Query(..., description="조회할
     if not canceled_bookings:
         raise HTTPException(status_code=404, detail="취소된 예약을 찾을 수 없습니다.")
     return canceled_bookings
+
+
+@router.post("/success/{user_id}/{screen_id}", response_model=SuccessBookingResponse)
+async def success_booking(user_id: int, screen_id: int, successrequest: SuccessBookingRequest, book_service: BookService = Depends(get_book_service)):
+    return await book_service.update_success_booking(user_id, screen_id, successrequest)
+
+
+@router.post("/fail/{user_id}/{screen_id}", response_model=FailBookingResponse)
+async def fail_booking(user_id: int, screen_id: int, failrequest: FailBookingRequest, book_service: BookService = Depends(get_book_service)):
+    return await book_service.update_fail_booking(user_id, screen_id, failrequest)

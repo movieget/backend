@@ -1,11 +1,8 @@
+import logging, base64, httpx, os
 from src.common.handlers.exception_handler import BusinessException, ErrorCode
-import logging
 from src.app.v1.payment.schemas.requestDto import PaymentRequest
 from src.app.v1.payment.schemas.responseDto import PaymentResponse
 from src.app.v1.payment.repository.payment_repository import PaymentRepository
-import base64
-import httpx
-import os
 from dotenv import load_dotenv
 
 logger = logging.getLogger(__name__)
@@ -65,7 +62,6 @@ class PaymentService:
 
                     await self.payment_repository.create_payment_data(paymentrequest)
 
-                    # NOTE: model_dump는 Pydantic 모델 인스턴스의 모든 필드와 값을 파이썬 딕셔너리로 변환
                     return payment_response.model_dump()
 
                 else:

@@ -7,6 +7,9 @@ from src.app.v1.user.repository.user_repository import UserRepository
 from src.app.v1.movie.repository.movie_repository import MovieRepository
 from src.app.v1.review.service.review_service import ReviewService
 from src.app.v1.review.repository.review_repository import ReviewRepository
+from src.app.v1.book.service.book_service import BookService
+from src.app.v1.book.repository.book_repository import BookRepository
+from src.app.v1.screen.repository.screeninfo_repository import ScreenInfoRepository
 
 
 # 의존성 주입을 위한 factory 함수
@@ -24,3 +27,10 @@ def get_review_service(
     user_repository: UserRepository = Depends(),
 ) -> ReviewService:
     return ReviewService(review_repository, movie_repository, user_repository)
+
+
+def get_book_service(
+    book_repository: BookRepository = Depends(),
+    screeninfo_repository: ScreenInfoRepository = Depends(),
+) -> BookService:
+    return BookService(book_repository, screeninfo_repository)

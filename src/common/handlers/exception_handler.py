@@ -7,14 +7,17 @@ class ErrorCode(Enum):
     INTERNAL_SERVER_ERROR = ("C004", "Server Error", 500)
     USER_NOT_FOUND = ("U001", "User Not Found", 404)
     MOVIE_NOT_FOUND = ("M001", "Movie Not Found", 404)
+    BOOK_NOT_FOUND = ("B001", "Book Not Found", 404)
     FAVORITE_NOT_FOUND = ("F001", "Favorite Not Found", 404)
     DUPLICATE_FAVORITE = ("F002", "Duplicate Favorite", 400)
+    SCREEN_NOT_FOUND = ("SC001", "Screen Not Found", 404)
+    SEAT_NOT_FOUND = ("S001", "Seat Not Found", 404)
+    SEAT_ALREADY_SELECTED = ("S002", "Seat Already Selected", 404)
 
     def __init__(self, code: str, message: str, status_code: int):
         self.code = code
         self.message = message
         self.status_code = status_code
-    
 
 
 class BusinessException(Exception):
