@@ -14,11 +14,11 @@ from src.app.v1.screen.repository.screeninfo_repository import ScreenInfoReposit
 
 # 의존성 주입을 위한 factory 함수
 def get_favorite_service(
-    favorite_repository: FavoriteRepository = Depends(),
     user_repository: UserRepository = Depends(),
     movie_repository: MovieRepository = Depends(),
+    favorite_repository: FavoriteRepository = Depends(),
 ) -> FavoriteService:
-    return FavoriteService(favorite_repository, user_repository, movie_repository)
+    return FavoriteService(user_repository, movie_repository, favorite_repository)
 
 
 def get_review_service(
