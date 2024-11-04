@@ -158,6 +158,7 @@ class PointRepository:
                 raise ValueError("사용 가능한 포인트가 부족합니다.")
             user.point -= points
             await user.save()
+
         except DoesNotExist:
             raise ValueError("해당 사용자를 찾을 수 없습니다.")
 

@@ -21,6 +21,7 @@ from src.app.v1.book.repository.book_repository import BookRepository
 from src.app.v1.screen.entity.screen import Screen
 from src.app.v1.screen.entity.screen_info import ScreenInfo
 from src.app.v1.screen.entity.seat import Seat
+from src.app.v1.user.entity.point_history import PointHistory
 from src.app.v1.user.repository.user_repository import UserRepository, PointRepository
 from src.app.v1.book.service.book_service import BookService
 from src.common.models.consts import StatusEnum
@@ -194,6 +195,7 @@ async def get_user_points(user_id: int):
 async def use_points_for_booking(request: UsePointsRequest):
 
     try:
+
         await PointRepository.deduct_points(request.user_id, request.total_point)
         await BookRepository.update_booking_status(request.book_id, StatusEnum.PENDING)
 
