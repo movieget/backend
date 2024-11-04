@@ -39,7 +39,7 @@ async def login_kakao_route(code: str, response: Response) -> KakaoOauthResponse
     image_url = kakao_user.get("properties", {}).get("thumbnail_image")
     kakao_id = kakao_user.get("id")
 
-    user = await user_repository.get_kakao_user(kakao_id=kakao_id)
+    user = await user_repository.get_kakao_user(oauth_id=kakao_id)
 
     if user:
         # 사용자(kakao id)가 DB에 있고, is_deleted=False 인 경우
@@ -60,20 +60,18 @@ async def login_kakao_route(code: str, response: Response) -> KakaoOauthResponse
             phone_number=phone_number,
             oauth_provider=oauth_provider,
             image_url=image_url,
-            kakao_id=kakao_id,
+            oauth_id=kakao_id,
             access_token=access_token,
-            response=response
+            response=response,
         )
 
 
 async def _handle_existing_user(user: User, access_token: str, response: Response) -> KakaoOauthResponse:
     # JWT 토큰 발행 (액세스토큰) 15분
-    jwt_access_token = create_jwt_token({"id": user.id, "type": "access"},
-                                        expires_delta=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    jwt_access_token = create_jwt_token({"id": user.id, "type": "access"}, expires_delta=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
 
     # 리프레쉬 토큰 생성 필요함 (액세스토큰 발급을 위한 리프레쉬토큰) 1시간
-    jwt_refresh_token = create_jwt_token({"id": user.id, "type": "refresh"},
-                                         expires_delta=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+    jwt_refresh_token = create_jwt_token({"id": user.id, "type": "refresh"}, expires_delta=settings.REFRESH_TOKEN_EXPIRE_DAYS)
     jti = decode_jwt_token(jwt_refresh_token).get("jti")
 
     # 쿠키에 JWT 리프레시 토큰 및 전달값 설정
@@ -98,9 +96,16 @@ async def _handle_existing_user(user: User, access_token: str, response: Respons
 
 
 async def _handle_new_user(
-        username: str, email: str, nickname: str, birthday: str,
-        phone_number: str, oauth_provider: str, image_url: str, kakao_id: int,
-        access_token: str, response: Response
+    username: str,
+    email: str,
+    nickname: str,
+    birthday: str,
+    phone_number: str,
+    oauth_provider: str,
+    image_url: str,
+    kakao_id: int,
+    access_token: str,
+    response: Response,
 ) -> KakaoOauthResponse:
     try:
         user = await user_repository.create_user(
@@ -111,16 +116,14 @@ async def _handle_new_user(
             phone_number=phone_number,
             oauth_provider=oauth_provider,
             image_url=image_url,
-            kakao_id=kakao_id,
+            oauth_id=kakao_id,
         )
 
         # JWT 토큰 발행 (액세스토큰) 15분
-        jwt_access_token = create_jwt_token({"id": user.id, "type": "access"},
-                                            expires_delta=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        jwt_access_token = create_jwt_token({"id": user.id, "type": "access"}, expires_delta=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
 
         # 리프레쉬 토큰 생성 필요함 (액세스토큰 발급을 위한 리프레쉬토큰) 1시간
-        jwt_refresh_token = create_jwt_token({"id": user.id, "type": "refresh"},
-                                             expires_delta=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+        jwt_refresh_token = create_jwt_token({"id": user.id, "type": "refresh"}, expires_delta=settings.REFRESH_TOKEN_EXPIRE_DAYS)
         jti = decode_jwt_token(jwt_refresh_token).get("jti")
 
         # 쿠키에 JWT 리프레시 토큰 및 전달값 설정
