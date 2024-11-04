@@ -102,45 +102,77 @@ async def booking_options(screening_date: str = Query(..., description="상영 �
         book_id=book_id, movies=list(movies.values()), locations=list(locations.values()), cinemas=list(cinemas.values()), screenings=screenings
     )
 
+logger = logging.getLogger(__name__)
 
-@router.get("/{screen_id}", response_model=SeatLayoutResponse)
-async def get_seat_layout(screen_id: int):
+@router.get("/{screen_id}/{screening_date}/{start_time}", response_model=SeatLayoutResponse)
+async def get_seat_layout(screen_id: int, screening_date: str, start_time: str):
+    # 요청 로그
+    logger.info(f"Received request for screen_id: {screen_id}, screening_date: {screening_date}, start_time: {start_time}")
 
-    screen = await Screen.get(id=screen_id)
+    try:
+        # ScreenInfo 조회
+        screen_info = await ScreenInfo.get(
+            screen_id=screen_id,
+            screening_date=screening_date,
+            start_time=start_time,
+        ).prefetch_related("screen")
 
-    if not screen:
-        raise HTTPException(status_code=404, detail="해당 screen_id에 대한 상영관 정보를 찾을 수 없습니다.")
+        if not screen_info:
+            logger.warning(f"No ScreenInfo found for screen_id: {screen_id}, screening_date: {screening_date}, start_time: {start_time}")
+            raise HTTPException(status_code=404, detail="해당 상영정보가 없습니다.")
 
-    seats = await Seat.filter(screen_id=screen.id).order_by("row", "column").all()
-    if not seats:
-        raise HTTPException(status_code=404, detail="해당 상영관의 좌석 정보를 찾을 수 없습니다.")
+        logger.info(f"Retrieved ScreenInfo: {screen_info}")
 
-    max_column = max(seat.column for seat in seats)
+        # Screen 데이터 가져오기
+        screen = screen_info.screen
+        logger.info(f"Retrieved Screen: {screen}")
 
+        # 좌석 데이터 조회
+        seats = await Seat.filter(screen_id=screen.id).order_by("row", "column").all()
+        if not seats:
+            logger.warning(f"No seats found for screen_id: {screen.id}")
+            raise HTTPException(status_code=404, detail="해당 상영관의 좌석 정보를 찾을 수 없습니다.")
 
-    # 좌석 레이아웃을 구성
-    seat_layout = {}
-    for seat in seats:
-        row_label = seat.row
-        if row_label not in seat_layout:
-            seat_layout[row_label] = [None] * max_column
+        logger.info(f"Retrieved {len(seats)} seats for screen_id: {screen.id}")
 
-        seat_layout[row_label][seat.column - 1] = {
-            "column": str(seat.column),
-            "status": not bool(seat.is_selected) if seat.is_selected is not None else None,
-        }
-    # 포맷팅된 응답 구성
-    formatted_response = {
-        "screen_id": screen_id,
-        "rows": [
-            {
-                "row": row,
-                "seats": [seat if seat is not None else {"column": str(index + 1), "status": None} for index, seat in enumerate(seat_layout[row])],
+        # 최대 열 수 계산
+        max_column = max(seat.column for seat in seats)
+        logger.info(f"Max column for seats: {max_column}")
+
+        # 좌석 레이아웃 구성
+        seat_layout = {}
+        for seat in seats:
+            row_label = seat.row
+            if row_label not in seat_layout:
+                seat_layout[row_label] = [None] * max_column
+
+            seat_layout[row_label][seat.column - 1] = {
+                "column": str(seat.column),
+                "status": not bool(seat.is_selected) if seat.is_selected is not None else None,
             }
-            for row in sorted(seat_layout.keys())
-        ],
-    }
-    return formatted_response
+
+        logger.info(f"Constructed seat layout for screen_id: {screen_id}")
+
+        # 포맷팅된 응답 구성
+        formatted_response = {
+            "screen_id": screen.id,
+            "screening_date": screening_date,
+            "start_time": start_time,
+            "rows": [
+                {
+                    "row": row,
+                    "seats": [seat if seat is not None else {"column": str(index + 1), "status": None} for index, seat in enumerate(seat_layout[row])],
+                }
+                for row in sorted(seat_layout.keys())
+            ],
+        }
+
+        logger.info(f"Formatted response: {formatted_response}")
+        return formatted_response
+
+    except Exception as e:
+        logger.error(f"Error while getting seat layout: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="서버 에러가 발생했습니다.")
 
 
 @router.get("/points/{user_id}", response_model=Dict[str, int])
