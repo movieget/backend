@@ -4,6 +4,7 @@ from src.app.v1.book.schemas.responseDto import SuccessBookingResponse, FailBook
 from tortoise.transactions import in_transaction
 from src.app.v1.book.repository.book_repository import BookRepository
 from src.app.v1.screen.repository.screeninfo_repository import ScreenInfoRepository
+from src.app.v1.user.entity.point_history import PointHistory
 from src.app.v1.user.repository.user_repository import PointRepository
 from src.common.handlers.exception_handler import BusinessException, ErrorCode
 import logging
@@ -35,7 +36,6 @@ class BookService:
                 raise BusinessException(ErrorCode.SEAT_ALREADY_SELECTED, detail=f"좌석 {seat_id}는 이미 선택되었습니다.")
 
         async with in_transaction():
-
             # 예약 정보 업데이트
             book = await self.book_repository.update_book(
                 book_id=successrequest.book_id,
@@ -52,6 +52,22 @@ class BookService:
                 seat.is_selected = True
                 await seat.save()
 
+            if successrequest.total_point > 0:
+                await PointHistory.create(
+                    user_id=user_id,
+                    change_type="이용 내역",
+                    points=successrequest.total_point,
+                    description=successrequest.title
+                )
+
+            total_point_add = (successrequest.adult_count + successrequest.child_count) * 100
+            await self.point_repository.update_points(
+                user_id=user_id,
+                points_to_add=total_point_add,
+                change_type="예매 적립",
+                description=successrequest.title
+            )
+        logger.info(f"{user_id}에게 {total_point_add}적립되었습니다.")
         return SuccessBookingResponse(message="예약이 성공적으로 완료되었습니다.", book_id=str(book.id))
 
     async def update_fail_booking(self, user_id: int, screen_id: int, failrequest: FailBookingRequest) -> FailBookingResponse:
@@ -78,6 +94,12 @@ class BookService:
                 user_id=user_id,
                 screen_info_id=screen_info.id,
             )
+            await PointHistory.filter(
+                user_id=user_id,
+                change_type="이용 내역",
+                points=failrequest.points_to_restore,
+                description=failrequest.title
+            ).delete()
 
             # 선택된 좌석의 상태를 업데이트 (is_selected를 False로 설정)
             # for seat_id in seat_ids:

@@ -42,7 +42,7 @@ class SuccessBookingRequest(PydanticModel):
     paymentKey: str
     orderId: str
     amount: int
-
+    total_point: int
 
 
 class FailBookingRequest(PydanticModel):
