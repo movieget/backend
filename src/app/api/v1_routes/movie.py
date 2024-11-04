@@ -79,25 +79,8 @@ async def get_movie_detail(movie_id: int, current_user: User = Depends(get_curre
         total_likes=total_likes,
         rating=movie.rating
     )
-    total_likes = await get_total_likes(movie.id, redis)
 
-    movie_detail = MovieDetail(
-        id=movie.id,
-        backdrop_image=movie.image_url,
-        poster_image=movie.poster_image_url,
-        title=movie.title,
-        age_rating=movie.age_rating,
-        genre=movie.genre,
-        duration=movie.duration,
-        playing=movie.status == MovieStatusEnum.NOW_SHOWING,
-        overview=movie.overview,
-        trailer_url=movie.trailer_url,
-        actor_images=actor_images,
-        is_likes=is_liked,
-        total_likes=total_likes,
-        rating=movie.rating
-    )
-    await cache_movie_detail(movie_id, movie_detail.dict(), redis)
+    await cache_movie_detail(movie_id, movie_detail.model_dump(), redis)
     return movie_detail
 
 
