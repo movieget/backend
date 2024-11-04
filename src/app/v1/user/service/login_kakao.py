@@ -3,7 +3,8 @@ from tortoise.exceptions import DBConnectionError
 
 from src.app.v1.user.entity.user import User
 from src.app.v1.user.repository.user_repository import UserRepository
-from src.app.v1.user.schemas.oauth import KakaoOauthResponse
+from src.app.v1.user.schemas.oauth import KakaoOauthErrorResponse, KakaoOauthResponse
+from src.app.v1.user.schemas.user import UserErrorResponse
 from src.app.v1.user.service.oauth_service import get_kakao_token, get_kakao_user_info
 from src.core.security import create_jwt_token, decode_jwt_token
 from src.app.v1.user.service.redis import save_refresh_token, save_kakao_access_token
@@ -13,7 +14,7 @@ from redis.exceptions import RedisError
 user_repository = UserRepository()
 
 
-async def login_kakao_route(code: str, response: Response) -> KakaoOauthResponse:
+async def login_kakao_route(code: str, response: Response) -> KakaoOauthResponse | UserErrorResponse:
     # 카카오 액세스 토큰과 리프레시 토큰 요청
     access_token = await get_kakao_token(code)
     if not access_token:
@@ -41,8 +42,13 @@ async def login_kakao_route(code: str, response: Response) -> KakaoOauthResponse
     user = await user_repository.get_kakao_user(kakao_id=kakao_id)
 
     if user:
-        # 사용자가 DB에 있다면
-        return await _handle_existing_user(user, access_token, response)
+        # 사용자(kakao id)가 DB에 있고, is_deleted=False 인 경우
+        if not user.is_deleted:
+            return await _handle_existing_user(user, access_token, response)
+
+        # 사용자(kakao id)가 DB에 있고, is_deleted=True 인 경우 (회원 탈퇴중인 유저)
+        else:
+            return UserErrorResponse(error="회원 탈퇴 처리중입니다. 탈퇴 완료 후 다시 가입해주세요.")
 
     else:
         # 사용자 정보가 없는 경우 유저 정보를 DB에 저장 (회원가입)
@@ -62,10 +68,12 @@ async def login_kakao_route(code: str, response: Response) -> KakaoOauthResponse
 
 async def _handle_existing_user(user: User, access_token: str, response: Response) -> KakaoOauthResponse:
     # JWT 토큰 발행 (액세스토큰) 15분
-    jwt_access_token = create_jwt_token({"id": user.id, "type": "access"}, expires_delta=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    jwt_access_token = create_jwt_token({"id": user.id, "type": "access"},
+                                        expires_delta=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
 
     # 리프레쉬 토큰 생성 필요함 (액세스토큰 발급을 위한 리프레쉬토큰) 1시간
-    jwt_refresh_token = create_jwt_token({"id": user.id, "type": "refresh"}, expires_delta=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+    jwt_refresh_token = create_jwt_token({"id": user.id, "type": "refresh"},
+                                         expires_delta=settings.REFRESH_TOKEN_EXPIRE_DAYS)
     jti = decode_jwt_token(jwt_refresh_token).get("jti")
 
     # 쿠키에 JWT 리프레시 토큰 및 전달값 설정
@@ -107,10 +115,12 @@ async def _handle_new_user(
         )
 
         # JWT 토큰 발행 (액세스토큰) 15분
-        jwt_access_token = create_jwt_token({"id": user.id, "type": "access"}, expires_delta=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        jwt_access_token = create_jwt_token({"id": user.id, "type": "access"},
+                                            expires_delta=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
 
         # 리프레쉬 토큰 생성 필요함 (액세스토큰 발급을 위한 리프레쉬토큰) 1시간
-        jwt_refresh_token = create_jwt_token({"id": user.id, "type": "refresh"}, expires_delta=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+        jwt_refresh_token = create_jwt_token({"id": user.id, "type": "refresh"},
+                                             expires_delta=settings.REFRESH_TOKEN_EXPIRE_DAYS)
         jti = decode_jwt_token(jwt_refresh_token).get("jti")
 
         # 쿠키에 JWT 리프레시 토큰 및 전달값 설정
