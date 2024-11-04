@@ -40,6 +40,12 @@ class UserRepository:
             kakao_id=kakao_id,
         )
 
+    async def update_profile_image(self, id: int, image_url: str):
+        user = await User.get(id=id)
+        user.image_url = image_url
+        await user.save()
+
+
 logging.basicConfig(level=logging.DEBUG)
 class PointRepository:
     @staticmethod
