@@ -80,7 +80,7 @@ app = FastAPI(lifespan=lifespan, debug=True)
 # NOTE: Turn off in Production
 # app = FastAPI(openapi_url=None)
 
-origins = ["d2xhtu2kp1he9o.cloudfront.net", "http://localhost:5173", "https://localhost:5173"]
+origins = ["https://daesik.store", "http://localhost:5173", "https://localhost:5173"]
 
 app.add_middleware(
     CORSMiddleware,
