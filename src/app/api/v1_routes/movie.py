@@ -1,12 +1,10 @@
-from typing import Optional
 from fastapi import APIRouter, HTTPException, Depends, status, Query, BackgroundTasks
 from src.app.v1.favorite.entity.favorite import Favorite
 from src.app.v1.movie.entity.movie import Movie
 from src.app.v1.movie.schemas.movie_schema import MovieDetail, MovieListResponse, MovieListItem, ActorImage
 from src.app.v1.user.entity.user import User
 from src.common.models.consts import MovieStatusEnum
-from src.app.v1.movie.service.movie_service import get_total_likes, schedule_likes_update, cache_movie_detail, \
-    get_cached_movie_detail
+from src.app.v1.movie.service.movie_service import get_total_likes, schedule_likes_update, cache_movie_detail, get_cached_movie_detail
 from src.common.utils.redis import get_redis
 
 
@@ -24,7 +22,7 @@ async def get_current_user():
     반환값:
     - User 객체: 현재 사용자 정보
     """
-    user = await User.get_or_none(id=2).only('id', 'username', 'email')
+    user = await User.get_or_none(id=2).only("id", "username", "email")
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
@@ -51,13 +49,12 @@ async def get_movie_detail(movie_id: int, current_user: User = Depends(get_curre
     if cached_detail:
         return MovieDetail(**cached_detail)
 
-    movie = await Movie.get_or_none(id=movie_id).prefetch_related('actor_images')
+    movie = await Movie.get_or_none(id=movie_id).prefetch_related("actor_images")
     if not movie:
         raise HTTPException(status_code=404, detail="영화를 찾을 수 없습니다.")
 
     actor_images = [
-        ActorImage(name=actor_image.actor_name, image_url=actor_image.image_url)
-        for actor_image in movie.actor_images if actor_image.image_url
+        ActorImage(name=actor_image.actor_name, image_url=actor_image.image_url) for actor_image in movie.actor_images if actor_image.image_url
     ]
 
     is_liked = await Favorite.filter(user=current_user, movie=movie).exists()
@@ -77,7 +74,7 @@ async def get_movie_detail(movie_id: int, current_user: User = Depends(get_curre
         actor_images=actor_images,
         is_likes=is_liked,
         total_likes=total_likes,
-        rating=movie.rating
+        rating=movie.rating,
     )
 
     await cache_movie_detail(movie_id, movie_detail.model_dump(), redis)
@@ -86,10 +83,7 @@ async def get_movie_detail(movie_id: int, current_user: User = Depends(get_curre
 
 @router.post("/{movie_id}", status_code=status.HTTP_200_OK)
 async def toggle_favorite(
-        movie_id: int,
-        current_user: User = Depends(get_current_user),
-        background_tasks: BackgroundTasks = BackgroundTasks(),
-        redis=Depends(get_redis)
+    movie_id: int, current_user: User = Depends(get_current_user), background_tasks: BackgroundTasks = BackgroundTasks(), redis=Depends(get_redis)
 ):
     """
     toggle_favorite 함수
@@ -130,11 +124,11 @@ async def toggle_favorite(
 
 @router.get("/", response_model=MovieListResponse)
 async def search_movies(
-        page: int = Query(1, ge=1),
-        limit: int = Query(10, ge=1, le=100),
-        search: Optional[str] = None,
-        current_user: User = Depends(get_current_user),
-        redis=Depends(get_redis)
+    page: int = Query(1, ge=1),
+    limit: int = Query(10, ge=1, le=100),
+    search: str | None = None,
+    current_user: User = Depends(get_current_user),
+    redis=Depends(get_redis),
 ):
     """
     search_movies 함수
@@ -158,48 +152,41 @@ async def search_movies(
         query = query.filter(title__icontains=search)
 
     total = await query.count()
-    movies = await query.offset((page - 1) * limit).limit(limit).order_by('-created_at').prefetch_related(
-        'actor_images')
+    movies = await query.offset((page - 1) * limit).limit(limit).order_by("-created_at").prefetch_related("actor_images")
 
     movie_list = []
     for movie in movies:
         actor_images = [
-            ActorImage(name=actor_image.actor_name, image_url=actor_image.image_url)
-            for actor_image in movie.actor_images if actor_image.image_url
+            ActorImage(name=actor_image.actor_name, image_url=actor_image.image_url) for actor_image in movie.actor_images if actor_image.image_url
         ]
 
-        movie_list.append(MovieListItem(
-            id=movie.id,
-            title=movie.title,
-            poster_image=movie.poster_image_url,
-            age_rating=movie.age_rating,
-            genre=movie.genre,
-            playing=(movie.status == MovieStatusEnum.NOW_SHOWING.value),
-            overview=movie.overview,
-            trailer_url=movie.trailer_url,
-            duration=movie.duration,
-            backdrop_image=movie.image_url,
-            actor_images=actor_images,
-            rating=movie.rating,
-            is_likes=await Favorite.filter(user=current_user, movie=movie).exists(),
-            total_likes=await get_total_likes(movie.id, redis)
-        ))
+        movie_list.append(
+            MovieListItem(
+                id=movie.id,
+                title=movie.title,
+                poster_image=movie.poster_image_url,
+                age_rating=movie.age_rating,
+                genre=movie.genre,
+                playing=(movie.status == MovieStatusEnum.NOW_SHOWING.value),
+                overview=movie.overview,
+                trailer_url=movie.trailer_url,
+                duration=movie.duration,
+                backdrop_image=movie.image_url,
+                actor_images=actor_images,
+                rating=movie.rating,
+                is_likes=await Favorite.filter(user=current_user, movie=movie).exists(),
+                total_likes=await get_total_likes(movie.id, redis),
+            )
+        )
 
     next_page = page + 1 if (page * limit) < total else None
 
-    return MovieListResponse(
-        movies=movie_list,
-        total=len(movie_list),
-        next_page=next_page
-    )
+    return MovieListResponse(movies=movie_list, total=len(movie_list), next_page=next_page)
 
 
 @router.get("/movies/now", response_model=MovieListResponse)
 async def get_now_showing_movies(
-        page: int = Query(1, ge=1),
-        limit: int = Query(10, ge=1, le=100),
-        current_user: User = Depends(get_current_user),
-        redis=Depends(get_redis)
+    page: int = Query(1, ge=1), limit: int = Query(10, ge=1, le=100), current_user: User = Depends(get_current_user), redis=Depends(get_redis)
 ):
     """
     get_now_showing_movies 함수
@@ -218,47 +205,38 @@ async def get_now_showing_movies(
     """
     query = Movie.filter(status=MovieStatusEnum.NOW_SHOWING.value)
     total = await query.count()
-    movies = await query.offset((page - 1) * limit).limit(limit).order_by('-created_at').prefetch_related(
-        'actor_images')
+    movies = await query.offset((page - 1) * limit).limit(limit).order_by("-created_at").prefetch_related("actor_images")
 
     movie_list = []
     for movie in movies:
-        actor_images = [
-            ActorImage(name=a.actor_name, image_url=a.image_url)
-            for a in movie.actor_images if a.image_url
-        ]
-        movie_list.append(MovieListItem(
-            id=movie.id,
-            title=movie.title,
-            poster_image=movie.poster_image_url,
-            age_rating=movie.age_rating,
-            genre=movie.genre,
-            playing=True,
-            overview=movie.overview,
-            trailer_url=movie.trailer_url,
-            duration=movie.duration,
-            backdrop_image=movie.image_url,
-            actor_images=actor_images,
-            rating=movie.rating,
-            is_likes=await Favorite.filter(user=current_user, movie=movie).exists(),
-            total_likes=await get_total_likes(movie.id, redis)
-        ))
+        actor_images = [ActorImage(name=a.actor_name, image_url=a.image_url) for a in movie.actor_images if a.image_url]
+        movie_list.append(
+            MovieListItem(
+                id=movie.id,
+                title=movie.title,
+                poster_image=movie.poster_image_url,
+                age_rating=movie.age_rating,
+                genre=movie.genre,
+                playing=True,
+                overview=movie.overview,
+                trailer_url=movie.trailer_url,
+                duration=movie.duration,
+                backdrop_image=movie.image_url,
+                actor_images=actor_images,
+                rating=movie.rating,
+                is_likes=await Favorite.filter(user=current_user, movie=movie).exists(),
+                total_likes=await get_total_likes(movie.id, redis),
+            )
+        )
 
     next_page = page + 1 if (page * limit) < total else None
 
-    return MovieListResponse(
-        movies=movie_list,
-        total=len(movie_list),
-        next_page=next_page
-    )
+    return MovieListResponse(movies=movie_list, total=len(movie_list), next_page=next_page)
 
 
 @router.get("/movies/soon", response_model=MovieListResponse)
 async def get_coming_soon_movies(
-        page: int = Query(1, ge=1),
-        limit: int = Query(10, ge=1, le=100),
-        current_user: User = Depends(get_current_user),
-        redis=Depends(get_redis)
+    page: int = Query(1, ge=1), limit: int = Query(10, ge=1, le=100), current_user: User = Depends(get_current_user), redis=Depends(get_redis)
 ):
     """
     get_coming_soon_movies 함수
@@ -277,36 +255,30 @@ async def get_coming_soon_movies(
     """
     query = Movie.filter(status=MovieStatusEnum.COMING_SOON.value)
     total = await query.count()
-    movies = await query.offset((page - 1) * limit).limit(limit).order_by('-created_at').prefetch_related(
-        'actor_images')
+    movies = await query.offset((page - 1) * limit).limit(limit).order_by("-created_at").prefetch_related("actor_images")
 
     movie_list = []
     for movie in movies:
-        actor_images = [
-            ActorImage(name=a.actor_name, image_url=a.image_url)
-            for a in movie.actor_images if a.image_url
-        ]
-        movie_list.append(MovieListItem(
-            id=movie.id,
-            title=movie.title,
-            poster_image=movie.poster_image_url,
-            age_rating=movie.age_rating,
-            genre=movie.genre,
-            playing=False,
-            overview=movie.overview,
-            trailer_url=movie.trailer_url,
-            duration=movie.duration,
-            backdrop_image=movie.image_url,
-            actor_images=actor_images,
-            rating=movie.rating,
-            is_likes=await Favorite.filter(user=current_user, movie=movie).exists(),
-            total_likes=await get_total_likes(movie.id, redis)
-        ))
+        actor_images = [ActorImage(name=a.actor_name, image_url=a.image_url) for a in movie.actor_images if a.image_url]
+        movie_list.append(
+            MovieListItem(
+                id=movie.id,
+                title=movie.title,
+                poster_image=movie.poster_image_url,
+                age_rating=movie.age_rating,
+                genre=movie.genre,
+                playing=False,
+                overview=movie.overview,
+                trailer_url=movie.trailer_url,
+                duration=movie.duration,
+                backdrop_image=movie.image_url,
+                actor_images=actor_images,
+                rating=movie.rating,
+                is_likes=await Favorite.filter(user=current_user, movie=movie).exists(),
+                total_likes=await get_total_likes(movie.id, redis),
+            )
+        )
 
     next_page = page + 1 if (page * limit) < total else None
 
-    return MovieListResponse(
-        movies=movie_list,
-        total=len(movie_list),
-        next_page=next_page
-    )
+    return MovieListResponse(movies=movie_list, total=len(movie_list), next_page=next_page)

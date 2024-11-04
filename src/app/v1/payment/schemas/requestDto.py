@@ -1,21 +1,25 @@
 from pydantic import BaseModel as PydanticModel
 from datetime import date
+from typing import List
 
 
 class PaymentRequest(PydanticModel):
     book_id: str
-    poster: str
-    age: str
-    duration: int
+    poster_url: str
     title: str
-    date: date
-    start_time: str
-    location: str
-    cinema: str
-    screen_id: str
+    duration: int
+    booking_date: str
     screening_date: str
-    adult_count: str
-    child_count: str
+    age_rating: str
+    seats: List[str]
+    adult_count: int
+    child_count: int
+    screening_time: str
+    spot: str
+    cinema_name: str
+    screen_number: str
+    adult_count: int
+    child_count: int
     paymentKey: str
     orderId: str
     amount: int

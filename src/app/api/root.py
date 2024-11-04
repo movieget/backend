@@ -11,9 +11,9 @@ from src.app.api.v1_routes import (
 
 api_router = APIRouter()
 
-api_router.include_router(user.router, prefix="/user", tags=["User"])
+api_router.include_router(user.router, prefix="/user", tags=["Users"])
 api_router.include_router(book.router, prefix="/books", tags=["Books"])
 api_router.include_router(favorite.router, tags=["Favorites"])
-api_router.include_router(movie.router, prefix="/movie", tags=["Movie"])
+api_router.include_router(movie.router, prefix="/movie", tags=["Movies"])
 api_router.include_router(review.router, tags=["Reviews"])
 api_router.include_router(payment.router, tags=["Payments"])

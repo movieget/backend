@@ -1,5 +1,6 @@
 from pydantic import BaseModel as PydanticModel, ConfigDict, Field
 from datetime import date
+from typing import List
 
 
 # NOTE: 전체 Review로 List 형태로 전달
@@ -16,8 +17,14 @@ class ReviewsResponse(PydanticModel):
     registration_date: date = Field(..., alias="creationDate")
 
 
+class ReviewListResponse(PydanticModel):
+    reviews: List[ReviewsResponse]
+    total: int
+    next_page: int | None
+
+
 class ReviewCreateResponse(PydanticModel):
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
     id: int
     user_id: int
     title: str

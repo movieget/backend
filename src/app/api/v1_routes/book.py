@@ -1,10 +1,9 @@
 import logging
-from asyncio import gather
-from typing import List, Dict, Optional, Any
+from typing import List, Dict, Any
 from fastapi import APIRouter, HTTPException, Query, Depends
-from datetime import date, time, timedelta, datetime
+from datetime import date, timedelta, datetime
 
-from src.app.v1.book.schemas.requestDto import BookRequest, UsePointsRequest
+from src.app.v1.book.schemas.requestDto import UsePointsRequest, SuccessBookingRequest, FailBookingRequest
 from src.app.v1.book.schemas.responseDto import (
     BookOptionsResponse,
     SeatLayoutResponse,
@@ -12,19 +11,22 @@ from src.app.v1.book.schemas.responseDto import (
     LocationOption,
     CinemaOption,
     ScreeningOption,
-    PaymentRedirectResponse,
+    SuccessBookingResponse,
+    FailBookingResponse,
     CompletedBookingResponse,
     CancelledBookingResponse,
 )
 
 from src.app.v1.book.repository.book_repository import BookRepository
+from src.app.v1.screen.entity.screen import Screen
 from src.app.v1.screen.entity.screen_info import ScreenInfo
 from src.app.v1.screen.entity.seat import Seat
+from src.app.v1.user.entity.point_history import PointHistory
 from src.app.v1.user.repository.user_repository import UserRepository, PointRepository
-from src.app.v1.book.schemas.responseDto import BookResponse
+from src.app.v1.book.service.book_service import BookService
 from src.common.models.consts import StatusEnum
-from datetime import datetime, timedelta
-
+from src.core.factory import get_book_service
+import logging
 router = APIRouter()
 
 logging.basicConfig(level=logging.INFO)
@@ -101,52 +103,78 @@ async def booking_options(screening_date: str = Query(..., description="상영 �
         book_id=book_id, movies=list(movies.values()), locations=list(locations.values()), cinemas=list(cinemas.values()), screenings=screenings
     )
 
+logger = logging.getLogger(__name__)
 
-@router.get("/{screen_id}", response_model=SeatLayoutResponse)
-async def get_seat_layout(screen_id: int):
-    # ScreenInfo 및 관련 Screen 데이터를 조회
-    screen_info = await ScreenInfo.get(id=screen_id).prefetch_related("screen")
+@router.get("/{screen_id}/{screening_date}/{start_time}", response_model=SeatLayoutResponse)
+async def get_seat_layout(screen_id: int, screening_date: str, start_time: str):
+    # 요청 로그
+    logger.info(f"Received request for screen_id: {screen_id}, screening_date: {screening_date}, start_time: {start_time}")
 
-    if not screen_info:
-        raise HTTPException(status_code=404, detail="해당 screen_id에 대한 상영관 정보를 찾을 수 없습니다.")
+    try:
+        # ScreenInfo 조회
+        screen_info = await ScreenInfo.get(
+            screen_id=screen_id,
+            screening_date=screening_date,
+            start_time=start_time,
+        ).prefetch_related("screen")
 
-    # 해당 상영관의 모든 좌석 데이터를 가져오기
-    seats = await Seat.filter(screen_id=screen_info.screen.id).order_by("row", "column").all()
-    if not seats:
-        raise HTTPException(status_code=404, detail="해당 상영관의 좌석 정보를 찾을 수 없습니다.")
+        if not screen_info:
+            logger.warning(f"No ScreenInfo found for screen_id: {screen_id}, screening_date: {screening_date}, start_time: {start_time}")
+            raise HTTPException(status_code=404, detail="해당 상영정보가 없습니다.")
 
-    # 각 상영관의 최대 좌석 수를 구함
-    max_column = max(seat.column for seat in seats)
+        logger.info(f"Retrieved ScreenInfo: {screen_info}")
 
-    # 좌석 레이아웃을 구성
-    seat_layout = {}
-    for seat in seats:
-        row_label = seat.row
-        if row_label not in seat_layout:
-            seat_layout[row_label] = [None] * max_column  # 최대 좌석 수에 맞게 리스트 초기화
+        # Screen 데이터 가져오기
+        screen = screen_info.screen
+        logger.info(f"Retrieved Screen: {screen}")
 
-        # 좌석 정보를 해당 열 위치에 삽입
-        seat_layout[row_label][seat.column - 1] = {
-            "column": str(seat.column),
-            "status": not bool(seat.is_selected) if seat.is_selected is not None else None
+        # 좌석 데이터 조회
+        seats = await Seat.filter(screen_id=screen.id).order_by("row", "column").all()
+        if not seats:
+            logger.warning(f"No seats found for screen_id: {screen.id}")
+            raise HTTPException(status_code=404, detail="해당 상영관의 좌석 정보를 찾을 수 없습니다.")
+
+        logger.info(f"Retrieved {len(seats)} seats for screen_id: {screen.id}")
+
+        # 최대 열 수 계산
+        max_column = max(seat.column for seat in seats)
+        logger.info(f"Max column for seats: {max_column}")
+
+        # 좌석 레이아웃 구성
+        seat_layout = {}
+        for seat in seats:
+            row_label = seat.row
+            if row_label not in seat_layout:
+                seat_layout[row_label] = [None] * max_column
+
+            seat_layout[row_label][seat.column - 1] = {
+                "column": str(seat.column),
+                "status": not bool(seat.is_selected) if seat.is_selected is not None else None,
+            }
+
+        logger.info(f"Constructed seat layout for screen_id: {screen_id}")
+
+        # 포맷팅된 응답 구성
+        formatted_response = {
+            "screen_id": screen.id,
+            "screening_date": screening_date,
+            "start_time": start_time,
+            "rows": [
+                {
+                    "row": row,
+                    "seats": [seat if seat is not None else {"column": str(index + 1), "status": None} for index, seat in enumerate(seat_layout[row])],
+                }
+                for row in sorted(seat_layout.keys())
+            ],
         }
 
-    # 포맷팅된 응답 구성
-    formatted_response = {
-        "screen_id": screen_id,
-        "rows": [
-            {
-                "row": row,
-                "seats": [
-                    seat if seat is not None else {"column": str(index + 1), "status": None}
-                    for index, seat in enumerate(seat_layout[row])
-                ]
-            }
-            for row in sorted(seat_layout.keys())
-        ]
-    }
+        logger.info(f"Formatted response: {formatted_response}")
+        return formatted_response
 
-    return formatted_response
+    except Exception as e:
+        logger.error(f"Error while getting seat layout: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="서버 에러가 발생했습니다.")
+
 
 @router.get("/points/{user_id}", response_model=Dict[str, int])
 async def get_user_points(user_id: int):
@@ -167,14 +195,16 @@ async def get_user_points(user_id: int):
 async def use_points_for_booking(request: UsePointsRequest):
 
     try:
+
         await PointRepository.deduct_points(request.user_id, request.total_point)
         await BookRepository.update_booking_status(request.book_id, StatusEnum.PENDING)
 
         return {
             "status": "진행중",
             "remaining_points": await PointRepository.get_remaining_points(request.user_id),
-            "message": "포인트가 임시로 차감되었으며, 결제 진행 중입니다."
+            "message": "포인트가 임시로 차감되었으며, 결제 진행 중입니다.",
         }
+
     except Exception as e:
         logging.error(f"Error during point usage: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="포인트 사용 처리 중 오류가 발생했습니다.")
@@ -198,3 +228,13 @@ async def get_canceled_bookings(user_id: int = Query(..., description="조회할
     if not canceled_bookings:
         raise HTTPException(status_code=404, detail="취소된 예약을 찾을 수 없습니다.")
     return canceled_bookings
+
+
+@router.post("/success/{user_id}/{screen_id}", response_model=SuccessBookingResponse)
+async def success_booking(user_id: int, screen_id: int, successrequest: SuccessBookingRequest, book_service: BookService = Depends(get_book_service)):
+    return await book_service.update_success_booking(user_id, screen_id, successrequest)
+
+
+@router.post("/fail/{user_id}/{screen_id}", response_model=FailBookingResponse)
+async def fail_booking(user_id: int, screen_id: int, failrequest: FailBookingRequest, book_service: BookService = Depends(get_book_service)):
+    return await book_service.update_fail_booking(user_id, screen_id, failrequest)

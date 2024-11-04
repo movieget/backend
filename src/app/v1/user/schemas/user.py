@@ -53,7 +53,14 @@ class UserResponseSchema(BaseModel):
     oauth_provider: str
     image_url: str = ""
 
-    # 추가적인 필드를 여기에 추가할 수 있습니다.
+
+class UserImageUpdateSchema(BaseModel):
+    message: str
+    image_url: str
+
+
+class UserErrorResponse(BaseModel):
+    error: str
 
 
 class UserUpdateSchema(BaseModel):

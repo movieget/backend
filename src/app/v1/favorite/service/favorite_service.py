@@ -9,10 +9,10 @@ from src.app.v1.favorite.schemas.requestDto import FavoriteAddRequest
 
 
 class FavoriteService:
-    def __init__(self, favorite_repository: FavoriteRepository, user_repository: UserRepository, movie_repository: MovieRepository):
-        self.favorite_repository = favorite_repository
+    def __init__(self, user_repository: UserRepository, movie_repository: MovieRepository, favorite_repository: FavoriteRepository):
         self.user_repository = user_repository
         self.movie_repository = movie_repository
+        self.favorite_repository = favorite_repository
 
     async def get_user_favorite(self, user_id: int, movie_id: int):
         try:
@@ -26,13 +26,9 @@ class FavoriteService:
             favorite = await self.favorite_repository.get_is_liked(user_id, movie_id)
 
             # is_liked 값 반환 로직을 Service에서 처리
-            return {
-                    "is_liked": favorite.is_liked if favorite else False,
-                    "user_id": user_id,
-                    "movie_id": movie_id
-                }
+            return {"is_liked": favorite.is_liked if favorite else False, "user_id": user_id, "movie_id": movie_id}
         except Exception as e:
-            raise BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, detail=f"찜 조회를 실패했습니다.")
+            raise BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, detail="찜 조회를 실패했습니다.")
 
     async def get_user_favorites(self, user_id: int) -> List[Favorite]:
         """사용자의 모든 찜 목록을 가져옵니다."""

@@ -3,7 +3,8 @@ from tortoise.exceptions import DBConnectionError
 
 from src.app.v1.user.entity.user import User
 from src.app.v1.user.repository.user_repository import UserRepository
-from src.app.v1.user.schemas.oauth import KakaoOauthResponse
+from src.app.v1.user.schemas.oauth import KakaoOauthErrorResponse, KakaoOauthResponse
+from src.app.v1.user.schemas.user import UserErrorResponse
 from src.app.v1.user.service.oauth_service import get_kakao_token, get_kakao_user_info
 from src.core.security import create_jwt_token, decode_jwt_token
 from src.app.v1.user.service.redis import save_refresh_token, save_kakao_access_token
@@ -13,7 +14,7 @@ from redis.exceptions import RedisError
 user_repository = UserRepository()
 
 
-async def login_kakao_route(code: str, response: Response) -> KakaoOauthResponse:
+async def login_kakao_route(code: str, response: Response) -> KakaoOauthResponse | UserErrorResponse:
     # 카카오 액세스 토큰과 리프레시 토큰 요청
     access_token = await get_kakao_token(code)
     if not access_token:
@@ -38,11 +39,16 @@ async def login_kakao_route(code: str, response: Response) -> KakaoOauthResponse
     image_url = kakao_user.get("properties", {}).get("thumbnail_image")
     kakao_id = kakao_user.get("id")
 
-    user = await user_repository.get_kakao_user(kakao_id=kakao_id)
+    user = await user_repository.get_kakao_user(oauth_id=kakao_id)
 
     if user:
-        # 사용자가 DB에 있다면
-        return await _handle_existing_user(user, access_token, response)
+        # 사용자(kakao id)가 DB에 있고, is_deleted=False 인 경우
+        if not user.is_deleted:
+            return await _handle_existing_user(user, access_token, response)
+
+        # 사용자(kakao id)가 DB에 있고, is_deleted=True 인 경우 (회원 탈퇴중인 유저)
+        else:
+            return UserErrorResponse(error="회원 탈퇴 처리중입니다. 탈퇴 완료 후 다시 가입해주세요.")
 
     else:
         # 사용자 정보가 없는 경우 유저 정보를 DB에 저장 (회원가입)
@@ -54,9 +60,9 @@ async def login_kakao_route(code: str, response: Response) -> KakaoOauthResponse
             phone_number=phone_number,
             oauth_provider=oauth_provider,
             image_url=image_url,
-            kakao_id=kakao_id,
+            oauth_id=kakao_id,
             access_token=access_token,
-            response=response
+            response=response,
         )
 
 
@@ -90,9 +96,16 @@ async def _handle_existing_user(user: User, access_token: str, response: Respons
 
 
 async def _handle_new_user(
-        username: str, email: str, nickname: str, birthday: str,
-        phone_number: str, oauth_provider: str, image_url: str, kakao_id: int,
-        access_token: str, response: Response
+    username: str,
+    email: str,
+    nickname: str,
+    birthday: str,
+    phone_number: str,
+    oauth_provider: str,
+    image_url: str,
+    kakao_id: int,
+    access_token: str,
+    response: Response,
 ) -> KakaoOauthResponse:
     try:
         user = await user_repository.create_user(
@@ -103,7 +116,7 @@ async def _handle_new_user(
             phone_number=phone_number,
             oauth_provider=oauth_provider,
             image_url=image_url,
-            kakao_id=kakao_id,
+            oauth_id=kakao_id,
         )
 
         # JWT 토큰 발행 (액세스토큰) 15분

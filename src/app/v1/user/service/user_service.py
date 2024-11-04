@@ -1,13 +1,22 @@
 import asyncio
 from datetime import datetime, timezone
+import os
+import uuid
+import urllib.parse
 
-from fastapi import HTTPException, status, Response
+from botocore.exceptions import BotoCoreError, ClientError
+from fastapi import HTTPException, UploadFile, status, Response
 from jose import JWTError, jwt
 from src.app.v1.user.entity.user import User
+from src.app.v1.user.repository.user_repository import UserRepository
 from src.app.v1.user.schemas.user import UserResponseSchema, UserUpdateSchema  # 필요한 경우 추가
 from src.app.v1.user.service.delete_user import schedule_account_deletion
 from src.app.v1.user.service.redis import add_token_to_blacklist
+from src.common.handlers.exception_handler import BusinessException, ErrorCode
+from src.common.utils.aws_s3 import s3_client
 from src.core.configs.database_config import settings
+
+repository = UserRepository()
 
 
 async def get_user_info(user_id: int) -> UserResponseSchema:
@@ -18,7 +27,7 @@ async def get_user_info(user_id: int) -> UserResponseSchema:
 
     return UserResponseSchema(
         id=user.id,
-        kakao_id=user.kakao_id,
+        oauth_id=user.oauth_id,
         nickname=user.nickname,
         email=user.email,
         username=user.username,
@@ -51,7 +60,7 @@ async def update_user_info(user_id: int, user_update: UserUpdateSchema) -> UserR
 
     return UserResponseSchema(
         id=user.id,
-        kakao_id=user.kakao_id,
+        oauth_id=user.oauth_id,
         nickname=user.nickname,
         email=user.email,
         username=user.username,
@@ -113,3 +122,28 @@ async def delete_user_account(user_id: int) -> dict:
     asyncio.create_task(schedule_account_deletion(user_id))
 
     return {"message": "회원 탈퇴 요청이 완료되었습니다. 7일 후에 계정이 삭제됩니다."}
+
+
+async def update_profile_image_url(user_id: int, image_file):
+    # 사용자 확인
+    user = await repository.get_user(user_id)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    # 파일 이름 생성
+    filename = f"profile_{user_id}_{str(uuid.uuid4())}.jpg"
+    s3_key = f"{user_id}/profile_images/{filename}"
+
+    try:
+        # S3에 파일 업로드
+        s3_client.upload_fileobj(image_file.file, os.getenv("AWS_BUCKET_NAME"), s3_key)
+    except (BotoCoreError, ClientError) as e:
+        raise BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, detail=f"S3 upload fails: {str(e)}")
+
+    # S3에 업로드된 파일의 url 생성
+    url = f"https://s3-ap-northeast-2.amazonaws.com/{os.getenv("AWS_BUCKET_NAME")}/{urllib.parse.quote(s3_key, safe='~()*!.')}"
+
+    # 사용자 프로필 이미지 URL 업데이트
+    await repository.update_profile_image(id=user_id, image_url=url)
+
+    return url

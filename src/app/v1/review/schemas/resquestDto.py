@@ -11,6 +11,7 @@ class ReviewCreateRequest(PydanticModel):
     contents: str
     rating: int
     review_image_url: str | None
+    registration_date: date
 
 
 # class ReviewImageRequest(PydanticModel):

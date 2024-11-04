@@ -2,7 +2,7 @@ import uuid, urllib.parse
 from botocore.exceptions import BotoCoreError, ClientError
 import os
 from dotenv import load_dotenv
-from typing import List, Dict
+from typing import Dict
 from src.common.utils.aws_s3 import s3_client
 from src.common.handlers.exception_handler import BusinessException, ErrorCode
 from src.app.v1.review.entity.review import Review
@@ -10,7 +10,7 @@ from src.app.v1.review.repository.review_repository import ReviewRepository
 from src.app.v1.movie.repository.movie_repository import MovieRepository
 from src.app.v1.user.repository.user_repository import UserRepository
 from src.app.v1.review.schemas.resquestDto import ReviewCreateRequest, ReviewUpdateRequest
-from src.app.v1.review.schemas.responseDto import ReviewImageResponse, ReviewsResponse, ReviewCreateResponse
+from src.app.v1.review.schemas.responseDto import ReviewImageResponse, ReviewsResponse, ReviewCreateResponse, ReviewListResponse
 
 load_dotenv()
 
@@ -22,26 +22,35 @@ class ReviewService:
         self.movie_repository = movie_repository
         self.user_repository = user_repository
 
-    async def get_movie_reviews(self, movie_id: int) -> List[ReviewsResponse]:
+    async def get_movie_reviews_pagination(self, movie_id: int, page: int, limit: int) -> ReviewListResponse:
         # Movie가 존재하는 지 조회
         reviews = await self.review_repository.get_reviews_by_movie_id(movie_id)
         if not reviews:
             raise BusinessException(ErrorCode.MOVIE_NOT_FOUND, f"조회한 {movie_id}가 존재하지 않습니다.")
 
-        # ReviewsResponse로 변환하여 반환
-        return [
+        total = len(reviews)
+        start = (page - 1) * limit
+        end = start + limit
+
+        paginated_reviews = reviews[start:end]
+
+        review_list = [
             ReviewsResponse(
                 id=review.id,
                 image_url=review.user.image_url,
                 username=review.user.username,
-                rating=review.rating.value,  # Assuming rating is an Enum
+                rating=review.rating.value,
                 title=review.title,
                 contents=review.contents,
                 review_image_url=review.review_image_url,
                 registration_date=review.registration_date,
             )
-            for review in reviews
+            for review in paginated_reviews
         ]
+
+        next_page = page + 1 if (page * limit) < total else None
+
+        return ReviewListResponse(reviews=review_list, total=total, next_page=next_page)
 
     async def create_review(self, movie_id: int, review_request: ReviewCreateRequest) -> ReviewCreateResponse:
         """새로운 리뷰를 생성합니다."""
@@ -59,8 +68,9 @@ class ReviewService:
             contents=review_request.contents,
             review_image_url=review_request.review_image_url,
             rating=review_request.rating,
-            user_id=review_request.user_id,
-            movie_id=movie_id,
+            registration_date=review_request.registration_date,
+            user_id=user.id,
+            movie_id=movie.id,
         )
 
         await self.review_repository.create_review(review)
@@ -68,12 +78,12 @@ class ReviewService:
         # ReviewCreateResponse로 변환하여 반환
         return ReviewCreateResponse(
             id=review.id,
-            user_id=review.user_id,  # 사용자 이름
             rating=review.rating.value,  # 평점 (Enum에서 값 가져오기)
             title=review.title,
             contents=review.contents,
             review_image_url=review.review_image_url,
-            # registration_date=review.registration_date,
+            registration_date=review.registration_date,
+            user_id=user.id,  # 사용자 이름
         )
 
     async def upload_review_image(self, user_id, image_file) -> Dict:

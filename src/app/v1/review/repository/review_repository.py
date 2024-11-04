@@ -11,12 +11,12 @@ class ReviewRepository:
         return await Review.filter(movie=movie_id).prefetch_related("user").all()
 
     @staticmethod
-    async def create_review(review: Review):
+    async def create_review(review: Review) -> Review:
         """리뷰 생성"""
         await review.save()
-        
+
     @staticmethod
-    async def update_review(review: Review):
+    async def update_review(review: Review) -> Review:
         """리뷰를 업데이트합니다."""
         await review.save()
 
