@@ -4,6 +4,7 @@ from src.app.v1.book.schemas.responseDto import SuccessBookingResponse, FailBook
 from tortoise.transactions import in_transaction
 from src.app.v1.book.repository.book_repository import BookRepository
 from src.app.v1.screen.repository.screeninfo_repository import ScreenInfoRepository
+from src.app.v1.user.repository.user_repository import PointRepository
 from src.common.handlers.exception_handler import BusinessException, ErrorCode
 import logging
 
@@ -12,10 +13,14 @@ logger = logging.getLogger(__name__)
 
 class BookService:
 
-    def __init__(self, book_repository: BookRepository, screeninfo_repository: ScreenInfoRepository):
+    def __init__(
+            self, book_repository: BookRepository,
+            screeninfo_repository: ScreenInfoRepository,
+            point_repository: PointRepository,
+    ):
         self.book_repository = book_repository
         self.screeninfo_repository = screeninfo_repository
-
+        self.point_repository = point_repository
     async def update_success_booking(self, user_id: int, screen_id: int, successrequest: SuccessBookingRequest) -> SuccessBookingResponse:
         screen_info = await self.screeninfo_repository.get_screen_info_id(screen_id, successrequest.screening_date, successrequest.screening_time)
         if not screen_info:
@@ -30,6 +35,7 @@ class BookService:
                 raise BusinessException(ErrorCode.SEAT_ALREADY_SELECTED, detail=f"좌석 {seat_id}는 이미 선택되었습니다.")
 
         async with in_transaction():
+
             # 예약 정보 업데이트
             book = await self.book_repository.update_book(
                 book_id=successrequest.book_id,
@@ -62,6 +68,7 @@ class BookService:
         #         raise BusinessException(ErrorCode.SEAT_ALREADY_SELECTED, detail=f"좌석 {seat_id}는 이미 선택되었습니다.")
 
         async with in_transaction():
+            await self.point_repository.restore_points(user_id, failrequest.points_to_restore)
             # 예약 상태를 'CANCELLED'로 업데이트
             book = await self.book_repository.update_book(
                 book_id=failrequest.book_id,

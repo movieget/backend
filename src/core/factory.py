@@ -3,7 +3,7 @@ from fastapi import Depends
 # 서비스와 리포지토리 임포트
 from src.app.v1.favorite.service.favorite_service import FavoriteService
 from src.app.v1.favorite.repository.favorite_repository import FavoriteRepository
-from src.app.v1.user.repository.user_repository import UserRepository
+from src.app.v1.user.repository.user_repository import UserRepository, PointRepository
 from src.app.v1.movie.repository.movie_repository import MovieRepository
 from src.app.v1.review.service.review_service import ReviewService
 from src.app.v1.review.repository.review_repository import ReviewRepository
@@ -32,5 +32,6 @@ def get_review_service(
 def get_book_service(
     book_repository: BookRepository = Depends(),
     screeninfo_repository: ScreenInfoRepository = Depends(),
+    point_repository: PointRepository = Depends(),
 ) -> BookService:
-    return BookService(book_repository, screeninfo_repository)
+    return BookService(book_repository, screeninfo_repository, point_repository)

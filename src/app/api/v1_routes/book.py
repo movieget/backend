@@ -173,6 +173,7 @@ async def use_points_for_booking(request: UsePointsRequest):
             "remaining_points": await PointRepository.get_remaining_points(request.user_id),
             "message": "포인트가 임시로 차감되었으며, 결제 진행 중입니다.",
         }
+
     except Exception as e:
         logging.error(f"Error during point usage: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="포인트 사용 처리 중 오류가 발생했습니다.")
