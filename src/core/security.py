@@ -35,9 +35,9 @@ def decode_jwt_token(token: str):
 
 
 async def get_current_user(
-        request: Request,   # 쿠키의 리프레시 토큰을 가져오기 위해
-        response: Response,
-        access_token: str = Depends(oauth2_scheme),     # 헤더의 엑세스토큰
+    request: Request,  # 쿠키의 리프레시 토큰을 가져오기 위해
+    response: Response,
+    access_token: str = Depends(oauth2_scheme),  # 헤더의 엑세스토큰
 ) -> KakaoOauthResponse:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -46,9 +46,10 @@ async def get_current_user(
     )
     try:
         # 액세스 토큰의 유효성 검사
+        print(payload)
         payload = decode_jwt_token(access_token)
         access_jti = payload.get("jti")
-        access_exp = payload.get("exp")    # 만료시간 추출
+        access_exp = payload.get("exp")  # 만료시간 추출
         access_id = payload.get("id")
 
         # 액세스 토큰 블랙리스트 확인
@@ -85,10 +86,7 @@ async def get_current_user(
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized User")
 
         # 리프레시 토큰이 유효하므로 -> 액세스 토큰 재발급
-        new_access_token = create_jwt_token(
-            {"id": refresh_user_id, "type": "access"},
-            expires_delta=settings.ACCESS_TOKEN_EXPIRE_MINUTES
-        )
+        new_access_token = create_jwt_token({"id": refresh_user_id, "type": "access"}, expires_delta=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
 
         # 쿠키에 현재 리프레시토큰 설정
         response.set_cookie(

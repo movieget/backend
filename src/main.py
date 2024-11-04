@@ -80,7 +80,7 @@ app = FastAPI(lifespan=lifespan, debug=True)
 # NOTE: Turn off in Production
 # app = FastAPI(openapi_url=None)
 
-origins = ["http://localhost:5173", "https://localhost:5173"]
+origins = ["d2xhtu2kp1he9o.cloudfront.net", "http://localhost:5173", "https://localhost:5173"]
 
 app.add_middleware(
     CORSMiddleware,
@@ -98,11 +98,6 @@ api_router.include_router(root_router)
 
 # api_router를 app에 포함
 app.include_router(api_router)
-
-
-@app.get("/")
-async def root():
-    return {"message": "Welcome"}
 
 
 if __name__ == "__main__":
