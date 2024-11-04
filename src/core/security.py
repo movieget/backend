@@ -44,14 +44,14 @@ async def get_current_user(
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    # 액세스 토큰의 유효성 검사
     try:
+        # 액세스 토큰의 유효성 검사
         payload = decode_jwt_token(access_token)
         access_jti = payload.get("jti")
         access_exp = payload.get("exp")    # 만료시간 추출
         access_id = payload.get("id")
 
-        # 블랙리스트 확인
+        # 액세스 토큰 블랙리스트 확인
         if await is_token_blacklisted(access_jti):
             raise HTTPException(status_code=401, detail="Token blacklisted")
 
@@ -72,7 +72,11 @@ async def get_current_user(
         refresh_exp = refresh_payload.get("exp")
         refresh_user_id = payload.get("id")
 
-        # 리프레시 토큰의 만료시간 확인
+        # 리프레시토큰 블랙리스트 확인
+        if await is_token_blacklisted(refresh_jti):
+            raise HTTPException(status_code=401, detail="Refresh_Token blacklisted, Please Login again")
+
+        # 리프레시 토큰의 만료시간 확인 (만료되었을때)
         if refresh_exp and datetime.now(timezone.utc).timestamp() > refresh_exp:
             raise HTTPException(status_code=401, detail="Refresh token expired, Please login again")
 
@@ -80,7 +84,7 @@ async def get_current_user(
         if await verify_refresh_token(refresh_user_id, refresh_jti) is not True:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized User")
 
-        # 리프레시 토큰이 유효할 때 -> 액세스 토큰 재발급
+        # 리프레시 토큰이 유효하므로 -> 액세스 토큰 재발급
         new_access_token = create_jwt_token(
             {"id": refresh_user_id, "type": "access"},
             expires_delta=settings.ACCESS_TOKEN_EXPIRE_MINUTES
@@ -91,8 +95,8 @@ async def get_current_user(
             key="refresh_token",
             value=current_refresh_token,
             httponly=True,  # JavaScript로 접근 불가
-            secure=False,  # HTTPS에서만 동작 (로컬 테스트 시 False)
-            max_age=3600,  # 쿠키 만료 시간 (초 단위) ** 5분~10분 설정 필요
+            secure=True,  # HTTPS에서만 동작 (로컬 테스트 시 False)
+            max_age=3600,  # 쿠키 만료 시간 (초 단위)
             samesite="none",  # 동일 사이트 정책
         )
 
