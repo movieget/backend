@@ -18,13 +18,14 @@ from src.app.v1.book.schemas.responseDto import (
 )
 
 from src.app.v1.book.repository.book_repository import BookRepository
+from src.app.v1.screen.entity.screen import Screen
 from src.app.v1.screen.entity.screen_info import ScreenInfo
 from src.app.v1.screen.entity.seat import Seat
 from src.app.v1.user.repository.user_repository import UserRepository, PointRepository
 from src.app.v1.book.service.book_service import BookService
 from src.common.models.consts import StatusEnum
 from src.core.factory import get_book_service
-
+import logging
 router = APIRouter()
 
 logging.basicConfig(level=logging.INFO)
@@ -104,33 +105,30 @@ async def booking_options(screening_date: str = Query(..., description="상영 �
 
 @router.get("/{screen_id}", response_model=SeatLayoutResponse)
 async def get_seat_layout(screen_id: int):
-    # ScreenInfo 및 관련 Screen 데이터를 조회
-    screen_info = await ScreenInfo.get(id=screen_id).prefetch_related("screen")
 
-    if not screen_info:
+    screen = await Screen.get(id=screen_id)
+
+    if not screen:
         raise HTTPException(status_code=404, detail="해당 screen_id에 대한 상영관 정보를 찾을 수 없습니다.")
 
-    # 해당 상영관의 모든 좌석 데이터를 가져오기
-    seats = await Seat.filter(screen_id=screen_info.screen.id).order_by("row", "column").all()
+    seats = await Seat.filter(screen_id=screen.id).order_by("row", "column").all()
     if not seats:
         raise HTTPException(status_code=404, detail="해당 상영관의 좌석 정보를 찾을 수 없습니다.")
 
-    # 각 상영관의 최대 좌석 수를 구함
     max_column = max(seat.column for seat in seats)
+
 
     # 좌석 레이아웃을 구성
     seat_layout = {}
     for seat in seats:
         row_label = seat.row
         if row_label not in seat_layout:
-            seat_layout[row_label] = [None] * max_column  # 최대 좌석 수에 맞게 리스트 초기화
+            seat_layout[row_label] = [None] * max_column
 
-        # 좌석 정보를 해당 열 위치에 삽입
         seat_layout[row_label][seat.column - 1] = {
             "column": str(seat.column),
             "status": not bool(seat.is_selected) if seat.is_selected is not None else None,
         }
-
     # 포맷팅된 응답 구성
     formatted_response = {
         "screen_id": screen_id,
@@ -142,7 +140,6 @@ async def get_seat_layout(screen_id: int):
             for row in sorted(seat_layout.keys())
         ],
     }
-
     return formatted_response
 
 

@@ -197,7 +197,7 @@ class BookRepository:
 
     @staticmethod
     async def get_seat_layout(screen_id: int) -> List[Seat]:
-        seats = await Seat.filter(screen_id=screen_id).order_by("row", "seat_number").all()
+        seats = await Seat.filter(screen_id=screen_id).order_by("row", "column").all()
 
         if not seats:
             raise HTTPException(status_code=404, detail="지정한 화면 ID에 대한 좌석을 찾을 수 없습니다.")
