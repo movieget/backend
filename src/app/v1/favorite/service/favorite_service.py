@@ -9,9 +9,10 @@ from src.app.v1.favorite.schemas.requestDto import FavoriteAddRequest
 
 
 class FavoriteService:
-    favorite_repository: FavoriteRepository
-    user_repository: UserRepository
-    movie_repository: MovieRepository
+    def __init__(self, user_repository: UserRepository, movie_repository: MovieRepository, favorite_repository: FavoriteRepository):
+        self.user_repository = user_repository
+        self.movie_repository = movie_repository
+        self.favorite_repository = favorite_repository
 
     async def get_user_favorite(self, user_id: int, movie_id: int):
         try:
