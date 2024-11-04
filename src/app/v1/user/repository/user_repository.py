@@ -169,3 +169,12 @@ class PointRepository:
             return user.point
         except DoesNotExist:
             raise ValueError("해당 사용자를 찾을 수 없습니다.")
+
+    @staticmethod
+    async def restore_points(user_id: int, points: int) -> None:
+        try:
+            user = await User.get(id=user_id)
+            user.point += points
+            await user.save()
+        except DoesNotExist:
+            raise ValueError("해당 사용자를 찾을 수 없습니다.")
