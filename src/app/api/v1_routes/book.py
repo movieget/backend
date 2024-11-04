@@ -1,6 +1,6 @@
 import logging
 from typing import List, Dict, Any
-from fastapi import APIRouter, HTTPException, Query, Depends
+from fastapi import APIRouter, HTTPException, Query, Depends, Request
 from datetime import date, timedelta, datetime
 
 from src.app.v1.book.schemas.requestDto import UsePointsRequest, SuccessBookingRequest, FailBookingRequest
@@ -14,10 +14,11 @@ from src.app.v1.book.schemas.responseDto import (
     SuccessBookingResponse,
     FailBookingResponse,
     CompletedBookingResponse,
-    CancelledBookingResponse,
+    CancelledBookingResponse, PaymentFailureResponse, TossWebhookPayload,
 )
 
 from src.app.v1.book.repository.book_repository import BookRepository
+from src.app.v1.book.service.Refunds_service import handle_payment_failure, handle_payment_cancellation
 from src.app.v1.screen.entity.screen import Screen
 from src.app.v1.screen.entity.screen_info import ScreenInfo
 from src.app.v1.screen.entity.seat import Seat
@@ -30,6 +31,7 @@ import logging
 router = APIRouter()
 
 logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 async def get_current_user(user_id: int | None = Query(None)) -> int | None:
@@ -238,3 +240,49 @@ async def success_booking(user_id: int, screen_id: int, successrequest: SuccessB
 @router.post("/fail/{user_id}/{screen_id}", response_model=FailBookingResponse)
 async def fail_booking(user_id: int, screen_id: int, failrequest: FailBookingRequest, book_service: BookService = Depends(get_book_service)):
     return await book_service.update_fail_booking(user_id, screen_id, failrequest)
+
+
+######### 환 불 ##########
+@router.get("/payment-fail", response_model=PaymentFailureResponse)
+async def payment_fail(request: Request):
+    logger.info(f"Received payment failure request: {request.url}")
+    logger.info(f"Query parameters: {request.query_params}")
+
+    params = request.query_params
+    order_id = params.get("orderId")
+    error_code = params.get("code", "UNKNOWN_ERROR")
+    error_message = params.get("message", "An unknown error occurred")
+
+    book_id = None
+    if order_id:
+        try:
+            book_id = int(order_id)
+        except ValueError:
+            logger.error(f"Invalid orderId: {order_id}")
+            raise HTTPException(status_code=400, detail="Invalid orderId parameter")
+
+    logger.info(f"Payment failure params: book_id={book_id}, error_code={error_code}, error_message={error_message}")
+
+    try:
+        failure_response = await handle_payment_failure(book_id, error_code, error_message)
+        logger.info("Payment failure handled successfully")
+        return failure_response
+    except Exception as e:
+        logger.error(f"Error handling payment failure: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.post("/webhook")
+async def payment_webhook(payload: TossWebhookPayload):
+    logger.info(f"Received webhook payload: {payload}")
+    if payload.status == "CANCELED":
+        try:
+            cancellation_response = await handle_payment_cancellation(payload.paymentKey)
+            logger.info("Payment cancellation handled successfully")
+            return {"message": "Cancellation processed successfully"}
+        except Exception as e:
+            logger.error(f"Error handling payment cancellation: {str(e)}")
+            raise HTTPException(status_code=500, detail="Internal server error")
+
+    logger.info("Webhook received and processed")
+    return {"message": "Webhook received"}
