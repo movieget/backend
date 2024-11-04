@@ -1,17 +1,17 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, File, HTTPException, Request, Query, Response, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, Request, Query, Response
 from fastapi.security import OAuth2PasswordBearer
 
 from src.app.v1.user.entity.user import User
 from src.app.v1.user.repository.user_repository import PointRepository
 from src.app.v1.user.schemas.oauth import KakaoOauthResponse
-from src.app.v1.user.schemas.user import UserErrorResponse, UserImageUpdateSchema, UserResponseSchema, UserUpdateSchema, \
+from src.app.v1.user.schemas.user import UserErrorResponse, UserResponseSchema, UserUpdateSchema, \
     PointUseResponse, \
     PointStackResponse
 from src.app.v1.user.service.login_kakao import login_kakao_route
 from src.app.v1.user.service.user_service import delete_user_account, get_user_info, logout_user, \
-    update_profile_image_url, update_user_info
+    update_user_info
 from src.core.security import get_current_user
 
 router = APIRouter()
@@ -80,18 +80,18 @@ async def get_user_point_use(user_id: int, period: str = Query("today", regex="^
     except Exception as e:
         raise HTTPException(status_code=500, detail="내부 서버 오류")
 
-
-# 프로필 이미지 업데이트 엔드포인트
-@router.post("/update-profile-image")
-async def update_profile_image(
-        user: User = Depends(get_current_user),
-        file: UploadFile = File(...),
-):
-    image_url = await update_profile_image_url(user.id, file)
-
-    response_data = UserImageUpdateSchema(
-        message="프로필 이미지가 변경되었습니다.",
-        image_url=image_url
-    )
-
-    return response_data
+#
+# # 프로필 이미지 업데이트 엔드포인트
+# @router.post("/update-profile-image")
+# async def update_profile_image(
+#         user: User = Depends(get_current_user),
+#         file: UploadFile = File(...),
+# ):
+#     image_url = await update_profile_image_url(user.id, file)
+#
+#     response_data = UserImageUpdateSchema(
+#         message="프로필 이미지가 변경되었습니다.",
+#         image_url=image_url
+#     )
+#
+#     return response_data
