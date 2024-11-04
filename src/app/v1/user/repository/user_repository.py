@@ -19,14 +19,14 @@ class UserRepository:
         except DoesNotExist:
             return None
 
-    async def get_kakao_user(self, kakao_id: int) -> User | None:
+    async def get_kakao_user(self, oauth_id: int) -> User | None:
         try:
-            return await User.get(oauth_id=kakao_id)
+            return await User.get(oauth_id=oauth_id)
         except DoesNotExist:
             return None
 
     async def create_user(
-        self, username: str, email: str, nickname: str, birthday: str, phone_number: str, oauth_provider: str, image_url: str, kakao_id: int
+        self, username: str, email: str, nickname: str, birthday: str, phone_number: str, oauth_provider: str, image_url: str, oauth_id: int
     ) -> User:
         # 새 유저 생성
         return await User.create(
@@ -37,7 +37,7 @@ class UserRepository:
             phone_number=phone_number,
             oauth_provider=oauth_provider,
             image_url=image_url,
-            oauth_id=kakao_id,
+            oauth_id=oauth_id,
         )
 
     async def update_profile_image(self, id: int, image_url: str):
