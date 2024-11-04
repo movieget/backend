@@ -27,7 +27,7 @@ async def get_user_info(user_id: int) -> UserResponseSchema:
 
     return UserResponseSchema(
         id=user.id,
-        kakao_id=user.kakao_id,
+        oauth_id=user.oauth_id,
         nickname=user.nickname,
         email=user.email,
         username=user.username,
@@ -60,7 +60,7 @@ async def update_user_info(user_id: int, user_update: UserUpdateSchema) -> UserR
 
     return UserResponseSchema(
         id=user.id,
-        kakao_id=user.kakao_id,
+        oauth_id=user.oauth_id,
         nickname=user.nickname,
         email=user.email,
         username=user.username,
