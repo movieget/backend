@@ -1,7 +1,7 @@
-from datetime import date, time
+from datetime import date, time, datetime
 
 from pydantic import BaseModel as PydanticModel, ConfigDict
-from typing import List, Literal
+from typing import List, Literal, Optional
 
 
 class MovieOption(PydanticModel):
@@ -156,3 +156,56 @@ class SuccessBookingResponse(PydanticModel):
 class FailBookingResponse(PydanticModel):
     book_id: str
     message: str
+
+
+#### 취소내역 ####
+class PaymentFailureResponse(PydanticModel):
+    book_id: Optional[int] = None
+    poster_url: str = ""
+    title: str
+    age_rating: str
+    canceled_date: datetime
+    adult_count: int = 0
+    child_count: int = 0
+    spot: str
+    cinema_name: str
+    refund_amount: int = 0
+    error_code: str
+    error_message: str
+
+class PaymentCancellationResponse(PydanticModel):
+    model_config = ConfigDict(from_attributes=True)
+    book_id: int
+    poster_image_url: str
+    title: str
+    age_rating: Literal["All", "12", "15", "18"]
+    canceled_date: datetime
+    adult_count: int
+    child_count: int
+    spot: str
+    cinema_name: str
+    refund_amount: float
+    cancellation_reason: str
+
+class TossWebhookPayload(PydanticModel):
+    model_config = ConfigDict(from_attributes=True)
+    paymentKey: str
+    orderId: str
+    status: str
+    transactionKey: str
+    lastTransactionKey: str
+    requestedAt: datetime
+    approvedAt: datetime
+    useEscrow: bool
+    cultureExpense: bool
+    card: dict | None
+    virtualAccount: dict | None
+    transfer: dict | None
+    mobilePhone: dict | None
+    giftCertificate: dict | None
+    cashReceipt: dict | None
+    discount: dict | None
+    cancels: List[dict] | None
+    secret: str
+    type: str
+    mid: str
