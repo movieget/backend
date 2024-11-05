@@ -93,15 +93,12 @@ app.add_middleware(
 
 api_router = APIRouter(prefix="/api/v1")
 
-# root_router를 api_router에 포함
 api_router.include_router(root_router)
 
-# api_router를 app에 포함
 app.include_router(api_router)
 
 
 if __name__ == "__main__":
     import uvicorn
-    import asyncio
 
     uvicorn.run(app, host="0.0.0.0", port=8000)
