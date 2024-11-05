@@ -43,6 +43,7 @@ class SuccessBookingRequest(PydanticModel):
     orderId: str
     amount: int
     total_point: int
+    screen_info_id: int
 
 
 class FailBookingRequest(PydanticModel):
@@ -67,6 +68,7 @@ class FailBookingRequest(PydanticModel):
     orderId: str
     amount: int
     points_to_restore: int
+    screen_info_id: int
 
 class SeatSelectionRequest(PydanticModel):
     model_config = ConfigDict(from_attributes=True)

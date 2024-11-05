@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 class BookRepository:
+
     @staticmethod
     async def get_all_booking_data(screening_date: date) -> List[Dict]:
         logging.info(f"Fetching all booking data for screening date: {screening_date}")
@@ -77,7 +78,7 @@ class BookRepository:
         return bookings
 
     @staticmethod
-    async def get_completed_bookings_by_user(user_id: int) -> List[dict]:
+    async def get_completed_bookings_by_user(user_id: int) -> List[Book]:
         logging.info(f"Fetching completed bookings for user_id: {user_id}")
 
         completed_bookings = (
@@ -87,7 +88,6 @@ class BookRepository:
                 "screen_info__screen",
                 "screen_info__screen__cinema",
                 "screen_info__screen__cinema__location",
-                "book_seats__seat",
             )
             .all()
         )
@@ -101,7 +101,8 @@ class BookRepository:
         for booking in completed_bookings:
             start_time = datetime.min + booking.screen_info.start_time
             screening_time = start_time.strftime("%H:%M")
-            seats = [str(book_seat.seat.seat_number) for book_seat in booking.book_seats]
+            seats = [f"{seat.row}{seat.column}" for seat in
+                     await Seat.filter(screen_id=booking.screen_info.screen.id, is_selected=True)]
             location = await booking.screen_info.screen.cinema.location
             spot = location.spot if location else "Unknown"
             try:
@@ -112,6 +113,7 @@ class BookRepository:
                 logging.error(f"Error accessing movie_price: {e}")
                 total_price = 0
 
+            movie_title = booking.screen_info.movie.title
             age_rating = booking.screen_info.movie.age_rating.value
             screen_number_str = "".join(filter(str.isdigit, booking.screen_info.screen.screen_number))
             screen_number = int(screen_number_str) if screen_number_str else None
@@ -119,7 +121,7 @@ class BookRepository:
             booking_info = {
                 "booking_id": booking.id,
                 "poster_url": booking.screen_info.movie.poster_image_url,
-                "title": booking.screen_info.movie.title,
+                "title": movie_title,
                 "duration": booking.screen_info.movie.duration,
                 "booking_date": booking.book_time.strftime("%Y-%m-%d"),
                 "screening_date": booking.screen_info.screening_date.strftime("%Y-%m-%d"),
@@ -150,7 +152,6 @@ class BookRepository:
                 "screen_info__screen",
                 "screen_info__screen__cinema",
                 "screen_info__screen__cinema__location",
-                "book_seats__seat",
             )
             .all()
         )
@@ -164,7 +165,6 @@ class BookRepository:
         for booking in canceled_bookings:
             start_time = datetime.min + booking.screen_info.start_time
             screening_time = start_time.strftime("%H:%M")
-            seats = [str(book_seat.seat.seat_number) for book_seat in booking.book_seats]
             location = await booking.screen_info.screen.cinema.location
             spot = location.spot if location else "Unknown"
 
@@ -179,8 +179,7 @@ class BookRepository:
                 "duration": booking.screen_info.movie.duration,
                 "booking_date": booking.book_time.strftime("%Y-%m-%d"),
                 "screening_date": booking.screen_info.screening_date.strftime("%Y-%m-%d"),
-                "age_rating": age_rating,
-                "seats": seats,
+                "age_rating": age_rating.lower(),
                 "total_price": booking.movie_price,
                 "adult_count": booking.adult_count,
                 "child_count": booking.child_count,
