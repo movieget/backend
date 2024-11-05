@@ -8,18 +8,18 @@ from src.app.v1.book.schemas.requestDto import UsePointsRequest, SuccessBookingR
 from src.app.v1.book.schemas.responseDto import (
     BookOptionsResponse,
     SeatLayoutResponse,
-    MovieOption,
     LocationOption,
     CinemaOption,
-    ScreeningOption,
     SuccessBookingResponse,
     FailBookingResponse,
     CompletedBookingResponse,
-    CancelledBookingResponse, PaymentFailureResponse, TossWebhookPayload,
+    CancelledBookingResponse, PaymentFailureResponse, TossWebhookPayload, MovieWithScreenings,
 )
 
 from src.app.v1.book.repository.book_repository import BookRepository
 from src.app.v1.book.service.Refunds_service import handle_payment_failure, handle_payment_cancellation
+from src.app.v1.cinema.entity.cinema import Cinema
+from src.app.v1.location.entity.location import Location
 from src.app.v1.screen.entity.screen import Screen
 from src.app.v1.screen.entity.screen_info import ScreenInfo
 from src.app.v1.screen.entity.seat import Seat
@@ -59,51 +59,42 @@ async def booking_options(screening_date: str = Query(..., description="상영 �
 
     try:
         all_data = await BookRepository.get_all_booking_data(date.fromisoformat(screening_date))
+        logging.info(f"All booking data: {all_data}")
     except HTTPException as e:
         logging.error(f"Error fetching booking data: {str(e)}")
         raise e
 
-    movies = {}
+    movies = []
     locations = {}
     cinemas = {}
-    screenings = []
 
-    for item in all_data:
-        movie = item["movie"]
-        if movie["id"] not in movies:
-            movies[movie["id"]] = MovieOption(**movie)
+    for item in all_data.values():
+        movie_data = item
+        for screening in movie_data["screenings"]:
+            if isinstance(screening["start_time"], timedelta):
+                screening["start_time"] = (datetime.min + screening["start_time"]).time()
+            if isinstance(screening["end_time"], timedelta):
+                screening["end_time"] = (datetime.min + screening["end_time"]).time()
 
-        location = item["location"]
-        if location["id"] not in locations:
-            locations[location["id"]] = LocationOption(**location)
+        movies.append(MovieWithScreenings(**movie_data))
 
-        cinema = item["cinema"]
-        if cinema["id"] not in cinemas:
-            cinemas[cinema["id"]] = CinemaOption(**cinema)
+        location = item["locations"]
+        for data in location:
+            if data["id"] not in locations:
+                locations[data["id"]] = LocationOption(**data)
+        # import pdb;
+        # pdb.set_trace()
+        cinema = item["cinemas"]
+        for data in cinema:
+            if data["id"] not in cinemas:
+                cinemas[data["id"]] = CinemaOption(**data)
 
-        screening = item["screening"]
-
-        # Convert timedelta to time if necessary
-        start_time = screening["start_time"]
-        end_time = screening["end_time"]
-        if isinstance(start_time, timedelta):
-            start_time = (datetime.min + start_time).time()
-        if isinstance(end_time, timedelta):
-            end_time = (datetime.min + end_time).time()
-
-        screenings.append(
-            ScreeningOption(
-                id=screening["id"],
-                screen_id=screening["screen_id"],
-                screening_date=screening["screening_date"],
-                start_time=start_time,
-                end_time=end_time,
-            )
-        )
-
-    logging.info("Returning all booking options")
+    logging.info("이거 다 나와야함")
     return BookOptionsResponse(
-        book_id=book_id, movies=list(movies.values()), locations=list(locations.values()), cinemas=list(cinemas.values()), screenings=screenings
+        book_id=book_id,
+        movies=movies,
+        locations=list(locations.values()),
+        cinemas=list(cinemas.values()),
     )
 
 logger = logging.getLogger(__name__)

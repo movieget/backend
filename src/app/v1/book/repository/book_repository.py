@@ -24,40 +24,65 @@ class BookRepository:
     async def get_all_booking_data(screening_date: date) -> List[Dict]:
         logging.info(f"Fetching all booking data for screening date: {screening_date}")
 
-        screen_infos = await ScreenInfo.filter(screening_date=screening_date).prefetch_related("movie", "screen__cinema__location").all()
+        screen_infos = await ScreenInfo.filter(screening_date=screening_date).prefetch_related("movie",
+                                                                                               "screen__cinema__location").all()
 
-        result = []
+        movies = {}
+
         for screen_info in screen_infos:
-            # start_time과 end_time이 이미 datetime 객체인 경우 time() 메서드를 사용하여 시간 정보만 추출
-            start_time = screen_info.start_time.time() if isinstance(screen_info.start_time, datetime) else screen_info.start_time
-            end_time = screen_info.end_time.time() if isinstance(screen_info.end_time, datetime) else screen_info.end_time
+            start_time = screen_info.start_time.time() if isinstance(screen_info.start_time,
+                                                                     datetime) else screen_info.start_time
+            end_time = screen_info.end_time.time() if isinstance(screen_info.end_time,
+                                                                 datetime) else screen_info.end_time
 
-            result.append(
-                {
-                    "movie": {
-                        "id": screen_info.movie.id,
-                        "title": screen_info.movie.title,
-                        "genre": screen_info.movie.genre,
-                        "duration": screen_info.movie.duration,
-                        "age_rating": screen_info.movie.age_rating,
-                        "poster_image_url": screen_info.movie.poster_image_url,
-                    },
-                    "location": {"id": screen_info.screen.cinema.location.id, "spot": screen_info.screen.cinema.location.spot},
-                    "cinema": {"id": screen_info.screen.cinema.id, "cinema_name": screen_info.screen.cinema.cinema_name},
-                    "screening": {
-                        "id": screen_info.id,
-                        "screen_id": screen_info.screen.id,
-                        "screening_date": screen_info.screening_date,
-                        "start_time": start_time,
-                        "end_time": end_time,
-                    },
+            movie_id = screen_info.movie.id
+            if movie_id not in movies:
+                movies[movie_id] = {
+                    "id": movie_id,
+                    "title": screen_info.movie.title,
+                    "genre": screen_info.movie.genre,
+                    "duration": screen_info.movie.duration,
+                    "age_rating": screen_info.movie.age_rating,
+                    "poster_image_url": screen_info.movie.poster_image_url,
+                    "screenings": [],
+                    "locations":[],
+                    "cinemas":[]
                 }
-            )
 
-        if not result:
+            movies[movie_id]["screenings"].append({
+                "id": screen_info.id,
+                "screen_id": screen_info.screen.id,
+                "screening_date": screen_info.screening_date,
+                "start_time": start_time,
+                "end_time": end_time,
+            })
+
+            location_id = screen_info.screen.cinema.location.id
+            location = {
+                        "id": location_id,
+                        "spot": screen_info.screen.cinema.location.spot,
+                    }
+
+            if location not in movies[movie_id]["locations"]:
+                movies[movie_id]["locations"].append(location)
+            cinema_id = screen_info.screen.cinema.id
+            cinema = {
+                        "id": cinema_id,
+                        "cinema_name": screen_info.screen.cinema.cinema_name,
+                    }
+            if cinema not in movies[movie_id]["cinemas"]:
+                movies[movie_id]["cinemas"].append(cinema)
+
+
+        if not movies:
             logging.warning(f"No booking data found for screening date: {screening_date}")
+        # for data in movies.values():
+        #     print(f'{data}\n')
+        # import pdb;
+        # pdb.set_trace()
+        return movies
 
-        return result
+
 
     @staticmethod
     async def create_user_booking(user_id: int, status: StatusEnum = StatusEnum.PENDING, screen_info_id=None) -> Book:
