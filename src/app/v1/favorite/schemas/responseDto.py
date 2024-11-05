@@ -1,5 +1,6 @@
 from pydantic import BaseModel as PydanticModel, ConfigDict
-from typing import List
+from src.app.v1.movie.schemas.movie_schema import MovieListItem
+from typing import List, Dict, Optional
 
 """# NOTE
 일반적으로, Entity에 created_at이 있다면 이 값은 이미 데이터베이스에서 설정되어 있을 것입니다. 
@@ -14,10 +15,30 @@ class FavoriteItemResponse(PydanticModel):
     movie_id: int
 
 
+class FavoriteItemResponse(MovieListItem):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+
+
+class FavoriteMovieResponse(PydanticModel):
+    favorite_id: int
+    movie_id: int
+    is_liked: bool
+    title: str
+    poster_image: str
+    age_rating: str
+    genre: str
+    overview: Optional[str] = None
+    trailer_url: Optional[str] = None
+    duration: Optional[int] = None
+    rating: Optional[int] = None
+    total_likes: int
+
+
 class UserFavoritesResponse(PydanticModel):
     model_config = ConfigDict(from_attributes=True)
     user_id: int
-    favorites: List[FavoriteItemResponse]
+    favorites: List[FavoriteMovieResponse]
     # total_count: int
 
 
