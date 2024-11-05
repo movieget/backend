@@ -10,7 +10,6 @@ from opentelemetry.sdk.resources import Resource
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 from dotenv import load_dotenv
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
-import socket
 import logging
 
 logging.basicConfig(level=logging.DEBUG)
