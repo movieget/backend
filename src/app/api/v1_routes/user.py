@@ -30,7 +30,7 @@ async def login_kakao(code: str, response: Response) -> KakaoOauthResponse | Use
 
 # 내 정보 조회
 @router.get("/me", response_model=UserResponseSchema)
-async def read_me(current_user: User):
+async def read_me(current_user: User = Depends(get_current_user)):
     return await get_user_info(current_user.id)
 
 
