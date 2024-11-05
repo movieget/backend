@@ -5,15 +5,15 @@ from typing import List
 class FavoriteRepository:
     @staticmethod
     async def get_is_liked(user_id: int, movie_id: int) -> bool:
-        return await Favorite.filter(user_id=user_id, movie_id=movie_id).first()       
-        
+        return await Favorite.filter(user_id=user_id, movie_id=movie_id).first()
+
     @staticmethod
     async def get_favorite(user_id: int, movie_id: int) -> Favorite | None:
         return await Favorite.filter(user_id=user_id, movie_id=movie_id).first()
 
     @staticmethod
     async def get_user_favorites(user_id: int) -> List[Favorite]:
-        return await Favorite.filter(user_id=user_id).all()
+        return await Favorite.filter(user_id=user_id).prefetch_related("movie").all()
 
     @staticmethod
     async def add_favorite(user_id: int, movie_id: int) -> Favorite | None:

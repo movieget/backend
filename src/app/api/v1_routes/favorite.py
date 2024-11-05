@@ -4,6 +4,7 @@ from src.app.v1.favorite.schemas.requestDto import FavoriteAddRequest
 from src.app.v1.favorite.schemas.responseDto import FavoriteAddResponse, UserFavoritesResponse, FavortieCheckResponse
 from src.app.v1.favorite.service.favorite_service import FavoriteService
 from src.core.factory import get_favorite_service
+from src.common.utils.redis import get_redis
 
 router = APIRouter()
 

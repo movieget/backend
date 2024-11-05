@@ -1,11 +1,13 @@
 from typing import List
+
 from src.app.v1.user.repository.user_repository import UserRepository
 from src.app.v1.movie.repository.movie_repository import MovieRepository
 from src.app.v1.favorite.repository.favorite_repository import FavoriteRepository
 from src.app.v1.favorite.entity.favorite import Favorite
 from src.common.handlers.exception_handler import BusinessException, ErrorCode
-from src.app.v1.favorite.schemas.responseDto import FavoriteItemResponse, UserFavoritesResponse, FavoriteAddResponse
+from src.app.v1.favorite.schemas.responseDto import FavoriteItemResponse, UserFavoritesResponse, FavoriteAddResponse, FavoriteMovieResponse
 from src.app.v1.favorite.schemas.requestDto import FavoriteAddRequest
+from src.app.v1.favorite.entity.favorite import Favorite
 
 
 class FavoriteService:
@@ -40,11 +42,34 @@ class FavoriteService:
         # 사용자의 찜 목록 조회
         favorites = await self.favorite_repository.get_user_favorites(user_id)
 
+        # for i in favorites:
+        #     print(FavoriteItemResponse.model_validate(i))
+        # import pdb
+
+        # pdb.set_trace()
         # 찜 목록을 DTO로 변환
-        favortie_items = [FavoriteItemResponse.model_validate(item) for item in favorites]
+        # favortie_items = [FavoriteItemResponse.model_validate(item) for item in favorites]
+        favorite_items = [
+            FavoriteMovieResponse(
+                favorite_id=fav.id,
+                movie_id=fav.movie.id,
+                is_liked=fav.is_liked,
+                title=fav.movie.title,
+                poster_image=fav.movie.poster_image_url,
+                age_rating=fav.movie.age_rating,
+                genre=fav.movie.genre,
+                overview=fav.movie.overview,
+                trailer_url=fav.movie.trailer_url,
+                duration=fav.movie.duration,
+                actor_images=fav.movie.actor_images,
+                rating=fav.movie.rating,
+                total_likes=await Favorite.filter(movie=fav.movie, is_liked=True).count(),
+            )
+            for fav in favorites
+        ]
 
         # UserFavoritesResponse DTO 생성 및 반환
-        return UserFavoritesResponse(user_id=user_id, favorites=favortie_items)
+        return UserFavoritesResponse(user_id=user_id, favorites=favorite_items)
         # return UserFavoritesResponse(user_id=user_id, favorites=favortie_items, total_count=len(favortie_items))
 
     async def favorite_create_toggle(self, user_id, favoriteaddrequest: FavoriteAddRequest) -> FavoriteAddResponse:
