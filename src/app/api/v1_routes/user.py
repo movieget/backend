@@ -6,12 +6,16 @@ from fastapi.security import OAuth2PasswordBearer
 from src.app.v1.user.entity.user import User
 from src.app.v1.user.repository.user_repository import PointRepository
 from src.app.v1.user.schemas.oauth import KakaoOauthResponse
-from src.app.v1.user.schemas.user import UserErrorResponse, UserImageUpdateSchema, UserResponseSchema, UserUpdateSchema, \
-    PointUseResponse, \
-    PointStackResponse
+from src.app.v1.user.schemas.user import (
+    UserErrorResponse,
+    UserImageUpdateSchema,
+    UserResponseSchema,
+    UserUpdateSchema,
+    PointUseResponse,
+    PointStackResponse,
+)
 from src.app.v1.user.service.login_kakao import login_kakao_route
-from src.app.v1.user.service.user_service import delete_user_account, get_user_info, logout_user, \
-    update_profile_image_url, update_user_info
+from src.app.v1.user.service.user_service import delete_user_account, get_user_info, logout_user, update_profile_image_url, update_user_info
 from src.core.security import get_current_user
 
 router = APIRouter()
@@ -26,25 +30,22 @@ async def login_kakao(code: str, response: Response) -> KakaoOauthResponse | Use
 
 # 내 정보 조회
 @router.get("/me", response_model=UserResponseSchema)
-async def read_me(current_user: User = Depends(get_current_user)):
+async def read_me(current_user: User):
     return await get_user_info(current_user.id)
 
 
 # 내 정보 수정
 @router.patch("/me", response_model=UserResponseSchema)
-async def update_user(
-        user_update: UserUpdateSchema,
-        current_user: User = Depends(get_current_user)
-):
+async def update_user(user_update: UserUpdateSchema, current_user: User = Depends(get_current_user)):
     return await update_user_info(current_user.id, user_update)
 
 
 # 로그아웃
 @router.get("/logout/me")
 async def logout_me(
-        request: Request,
-        response: Response,
-        access_token: str = Depends(oauth2_scheme),
+    request: Request,
+    response: Response,
+    access_token: str = Depends(oauth2_scheme),
 ) -> dict:
     refresh_token = request.cookies.get("refresh_token")
     return await logout_user(access_token, refresh_token, response)
@@ -54,7 +55,6 @@ async def logout_me(
 @router.delete("/me")
 async def delete_user(current_user: User = Depends(get_current_user)) -> dict:
     return await delete_user_account(current_user.id)
-
 
 
 # 포인트 적립 내역
@@ -84,14 +84,11 @@ async def get_user_point_use(user_id: int, period: str = Query("today", regex="^
 # 프로필 이미지 업데이트 엔드포인트
 @router.post("/update-profile-image")
 async def update_profile_image(
-        user: User = Depends(get_current_user),
-        file: UploadFile = File(...),
+    user: User = Depends(get_current_user),
+    file: UploadFile = File(...),
 ):
     image_url = await update_profile_image_url(user.id, file)
 
-    response_data = UserImageUpdateSchema(
-        message="프로필 이미지가 변경되었습니다.",
-        image_url=image_url
-    )
+    response_data = UserImageUpdateSchema(message="프로필 이미지가 변경되었습니다.", image_url=image_url)
 
     return response_data
