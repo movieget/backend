@@ -138,7 +138,6 @@ class CancelledBookingResponse(PydanticModel):
     booking_date: str
     screening_date: str
     age_rating: Literal["all", "12", "15", "18"]
-    seats: List[str]
     total_price: int
     adult_count: int
     child_count: int

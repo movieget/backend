@@ -3,6 +3,7 @@ from typing import List, Dict, Any
 from fastapi import APIRouter, HTTPException, Query, Depends, Request
 from datetime import date, timedelta, datetime
 
+from src.app.v1.book.entity.book import Book
 from src.app.v1.book.schemas.requestDto import UsePointsRequest, SuccessBookingRequest, FailBookingRequest
 from src.app.v1.book.schemas.responseDto import (
     BookOptionsResponse,
