@@ -4,7 +4,20 @@ from pydantic import BaseModel as PydanticModel, ConfigDict
 from typing import List, Literal, Optional
 
 
-class MovieOption(PydanticModel):
+class CinemaOption(PydanticModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    cinema_name: str
+
+class ScreeningOption(PydanticModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    screen_id: int
+    screening_date: date
+    start_time: time
+    end_time: time
+
+class MovieWithScreenings(PydanticModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
     title: str
@@ -12,37 +25,19 @@ class MovieOption(PydanticModel):
     duration: int
     age_rating: str
     poster_image_url: str
-
+    screenings: List[ScreeningOption]
 
 class LocationOption(PydanticModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
     spot: str
 
-
-class CinemaOption(PydanticModel):
-    model_config = ConfigDict(from_attributes=True)
-    id: int
-    cinema_name: str
-
-
-class ScreeningOption(PydanticModel):
-    model_config = ConfigDict(from_attributes=True)
-    id: int
-    screening_date: date
-    start_time: time
-    end_time: time
-    screen_id: int
-
-
 class BookOptionsResponse(PydanticModel):
     model_config = ConfigDict(from_attributes=True)
     book_id: int | None
-    movies: List[MovieOption]
+    movies: List[MovieWithScreenings]
     locations: List[LocationOption]
     cinemas: List[CinemaOption]
-    screenings: List[ScreeningOption]
-
 
 class UpdateResponse(PydanticModel):
     model_config = ConfigDict(from_attributes=True)
