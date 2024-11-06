@@ -9,6 +9,7 @@ from src.app.v1.user.service.redis import get_kakao_refresh_token, save_kakao_ac
 
 async def get_kakao_token(code: str) -> str | None:
     url = "https://kauth.kakao.com/oauth/token"
+    headers = {"Content-type": "application/x-www-form-urlencoded;charset=utf-8"}
     params = {
         "grant_type": "authorization_code",
         "client_id": os.getenv("KAKAO_CLIENT_ID"),
@@ -17,7 +18,7 @@ async def get_kakao_token(code: str) -> str | None:
     }
 
     async with httpx.AsyncClient() as client:
-        response = await client.post(url, params=params)
+        response = await client.post(url, headers=headers, params=params)
 
         response_data = response.json()
 
@@ -31,10 +32,7 @@ async def get_kakao_token(code: str) -> str | None:
 
 async def get_kakao_user_info(access_token: str):
     url = "https://kapi.kakao.com/v2/user/me"
-    headers = {
-        "Authorization": f"Bearer {access_token}",
-        "Content-type": "application/x-www-form-urlencoded;charset=utf-8"
-        }
+    headers = {"Authorization": f"Bearer {access_token}", "Content-type": "application/x-www-form-urlencoded;charset=utf-8"}
 
     async with httpx.AsyncClient() as client:
         response = await client.get(url, headers=headers)
