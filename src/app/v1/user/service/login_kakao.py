@@ -1,4 +1,4 @@
-from fastapi import HTTPException, Response, status, Request
+from fastapi import HTTPException, Query, Response, status, Request
 from tortoise.exceptions import DBConnectionError
 
 from src.app.v1.user.entity.user import User
@@ -14,9 +14,8 @@ from redis.exceptions import RedisError
 user_repository = UserRepository()
 
 
-async def login_kakao_route(request: Request, response: Response) -> KakaoOauthResponse | UserErrorResponse:
+async def login_kakao_route(response: Response, code: str) -> KakaoOauthResponse | UserErrorResponse:
     # 카카오 액세스 토큰과 리프레시 토큰 요청
-    code = request.query_params.get('code')
     access_token = await get_kakao_token(code)
     if not access_token:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="카카오 로그인 실패")
