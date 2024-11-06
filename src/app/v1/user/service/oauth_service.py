@@ -9,7 +9,7 @@ from src.app.v1.user.service.redis import get_kakao_refresh_token, save_kakao_ac
 
 async def get_kakao_token(code: str) -> str | None:
     url = "https://kauth.kakao.com/oauth/token"
-    headers = {"Content-type": "application/x-www-form-urlencoded;charset=utf-8"}
+    headers = {"Content-Type": "application/x-www-form-urlencoded;charset=utf-8"}
     params = {
         "grant_type": "authorization_code",
         "client_id": os.getenv("KAKAO_CLIENT_ID"),
