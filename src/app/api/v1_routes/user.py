@@ -25,7 +25,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 # 카카오 로그인
 @router.get("/login/kakao")
 async def login_kakao(code: str, response: Response) -> KakaoOauthResponse | UserErrorResponse:
-    return await login_kakao_route(code, response)
+    return await login_kakao_route(code=code, response=response)
 
 
 # 내 정보 조회
