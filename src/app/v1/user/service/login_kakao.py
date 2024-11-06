@@ -1,4 +1,4 @@
-from fastapi import HTTPException, Response, status
+from fastapi import HTTPException, Response, status, Request
 from tortoise.exceptions import DBConnectionError
 
 from src.app.v1.user.entity.user import User
@@ -14,8 +14,9 @@ from redis.exceptions import RedisError
 user_repository = UserRepository()
 
 
-async def login_kakao_route(code: str, response: Response) -> KakaoOauthResponse | UserErrorResponse:
+async def login_kakao_route(request: Request, response: Response) -> KakaoOauthResponse | UserErrorResponse:
     # 카카오 액세스 토큰과 리프레시 토큰 요청
+    code = request.query_params.get('code')
     access_token = await get_kakao_token(code)
     if not access_token:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="카카오 로그인 실패")
@@ -103,7 +104,7 @@ async def _handle_new_user(
     phone_number: str,
     oauth_provider: str,
     image_url: str,
-    kakao_id: int,
+    oauth_id: int,
     access_token: str,
     response: Response,
 ) -> KakaoOauthResponse:
@@ -116,7 +117,7 @@ async def _handle_new_user(
             phone_number=phone_number,
             oauth_provider=oauth_provider,
             image_url=image_url,
-            oauth_id=kakao_id,
+            oauth_id=oauth_id,
         )
 
         # JWT 토큰 발행 (액세스토큰) 15분
