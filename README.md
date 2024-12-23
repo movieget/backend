@@ -152,7 +152,7 @@ $ fastapi dev main.py
 $ [or] python main.py
 ```
 
-## 4. 시스템 아키텍처 및 프로젝트 구조
+## 4. ERD, 시스템 아키텍처 및 프로젝트 구조
 
 ### ERD
 
